@@ -4,15 +4,16 @@ Full symbolic disassembly of **Bohdan R. Rau's** 1988 Polish text adventure **_H
 
 1. **`build/hobbit.prg` (Commodore 64):** **100% byte-for-byte identical** to the original 1988 C64 binary (`24,164` bytes, MD5 `96b2f853e9dc196a9a8cb572415e5bc9`).
 2. **`build/hobbit.xex` (Atari 800XL/XE):** Native Atari XL/XE executable built by switching the platform macro definitions (`-d:TARGET_ATARI=1`), demonstrating the cross-platform macro technique described by Bohdan R. Rau (`RAMON`, `ROMON`, `INCPTR`, and OS/hardware I/O wrappers).
+3. **`build/hobbit.atr` (Atari 800XL/XE Floppy Image):** Bootable 90 KB single-density Atari DOS 2.5 floppy disk containing `DOS.SYS`, `DUP.SYS`, and `build/hobbit.xex` as `AUTORUN.SYS`, supporting persistent floppy disk save/load (`D:HOBBIDATA`).
 
 ---
 
 ## Building
 
-Requires `mads` (Mad-Assembler) in `PATH`:
+Requires `mads` (Mad-Assembler) in `PATH` and `python3`:
 
 ```bash
-# Build both C64 (build/hobbit.prg) and Atari XL/XE (build/hobbit.xex)
+# Build C64 (build/hobbit.prg) and Atari XL/XE (build/hobbit.xex + build/hobbit.atr)
 make
 
 # Verify that build/hobbit.prg matches the original 1988 C64 binary MD5 checksum
@@ -25,10 +26,11 @@ make check
 
 | File | Description |
 | :--- | :--- |
-| `src/hobbit.asm` | Common platform-independent disassembly of the game (`$0801–$6663`), including the 8×8 Polish font, two-stage bootstrap, dictionary/room/object tables, and Polish inflection parser. |
-| `src/c64.inc` | Commodore 64 platform definitions & macros (`PROGRAM_HEADER`, `PROGRAM_FOOTER`, `RAMON`, `ROMON`, `INCPTR`, `INIT_HARDWARE`, `BANK_READ_IMPL`, KERNAL I/O wrappers, and zero-page pointers `$61–$62`, `$69–$6C`). |
-| `src/atari.inc` | Atari 800XL/XE platform definitions, macros & compatibility layer: zero-page pointers (`$E0–$EB`), 40×25 ANTIC Mode 2 Display List using the original C64 Polish font at `$0800–$0BFF`, PIA `PORTB` (`$D301`) banking for `$C000–$CFFF` RAM, PETSCII-to-screen-code console driver, POKEY Polish keyboard lookup tables, and CIO (`D:HOBBIDATA` / `C:`) + in-memory (`$A800`) save/load. |
-| `Makefile` | Builds `build/hobbit.prg` and `build/hobbit.xex` and verifies `checksum.md5`. |
+| `src/hobbit.asm` | Common platform-independent disassembly of the game (`$0801–$6419`), including the 8×8 Polish font, two-stage bootstrap, dictionary/room/object tables, and Polish inflection parser. |
+| `src/c64.inc` | Commodore 64 platform definitions & macros (`PROGRAM_HEADER`, `END_LOW_RAM_SEGMENT`, `PROGRAM_FOOTER`, `RAMON`, `ROMON`, `INCPTR`, `INIT_HARDWARE`, `BANK_READ_IMPL`, KERNAL I/O wrappers, and zero-page pointers `$61–$62`, `$69–$6C`). |
+| `src/atari.inc` | Atari 800XL/XE platform definitions, macros & compatibility layer: zero-page pointers (`$E0–$EB`), 40×25 ANTIC Mode 2 Display List using the original C64 Polish font at `$0800–$0BFF`, PIA `PORTB` (`$D301`) banking for `$C000–$CFFF` RAM, low-RAM relocation/swapping (`$0800–$1FFF` ↔ `$7000–$87FF`) to coexist with Atari DOS 2.5, PETSCII-to-screen-code console driver, POKEY Polish keyboard lookup tables, and DOS 2.5 CIO (`D:HOBBIDATA`) + in-memory (`$A800`) save/load. |
+| `tools/mk_atr.py` | Builds `build/hobbit.atr` containing Atari DOS 2.5 (`tools/dos25/`) and `build/hobbit.xex` as `AUTORUN.SYS`. |
+| `Makefile` | Builds `build/hobbit.prg`, `build/hobbit.xex`, and `build/hobbit.atr`, and verifies `checksum.md5`. |
 | `checksum.md5` | MD5 checksum of the original 1988 C64 `hobbit.prg`. |
 
 ---

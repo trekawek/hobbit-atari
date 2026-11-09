@@ -754,6 +754,8 @@ msg_thorin_axe_story: ; "\nTHORIN MÓWI:\nJEST TO TOPÓR WYKUTY W PODZIEMNYM\nMI
     dta CR, c'THORIN ZABIERA WIELKI TOP', PL_O, c'R', CR
     dta $00
 
+    END_LOW_RAM_SEGMENT
+
 msg_beorn_kills_you: ; "\nOKAZUJE SIĘ, ŻE BEORN BARDZO NIE LUBI\nJEŚLI OTWIERA SIĘ JEGO "
     dta CR, C_CYN, c'OKAZUJE SI', PL_E, c', ', PL_Z_DOT
     dta c'E BEORN BARDZO NIE LUBI', CR

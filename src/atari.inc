@@ -57,7 +57,14 @@ ATARI_CIOV      = $e456
 
 .macro PROGRAM_HEADER
     opt h+
-    org $0801
+    ; Assemble low RAM ($0801-$1F99) into load address $7001-$8799 so Atari DOS 2.5
+    ; ($0700-$1C4B) can load AUTORUN.SYS without overwriting itself during boot.
+    org $0801, $7001
+.endm
+
+.macro END_LOW_RAM_SEGMENT
+    org *+1
+    org *-1
 .endm
 
 ; Bank in RAM under $C000-$CFFF via PIA PORTB ($D301)
@@ -535,7 +542,7 @@ pokey_shifted_table:
     dta $39, $00, $30, $37, $14, $38, $00, $00 ; 30-37: 9, none, 0, 7, BACKSPACE, 8, <, >
     dta $46, $48, $44, $00, $00, $47, $d3, $c1 ; 38-3F: F, H, D, none, CAPS, G, Ś, Ą
 
-; Save / Load I/O Emulation (CIO IOCB #1 + In-Memory Fallback at $A800)
+; Save / Load I/O Emulation (Atari DOS 2.5 Block CIO + In-Memory Buffer at $A800)
 .def :atari_setlfs
     stx io_device               ; $08 = disk, $01 = tape
     sty io_mode                 ; $01 = save, $00 = load
@@ -549,39 +556,48 @@ pokey_shifted_table:
     sta io_ram_ptr_lo
     lda #>save_ram_buf
     sta io_ram_ptr_hi
-    lda #$00
-    sta cio_active
 
-    ; For tape ($01), use in-memory save_ram_buf directly (avoids OS C: blocking)
+    ; Only perform disk CIO on Load (io_mode == $00) with Disk (io_device == $08)
     lda io_device
     cmp #$08
-    bne @+2
+    bne @+1
+    lda io_mode
+    bne @+1
 
-    ; For disk ($08), try opening "D:HOBBIDATA" via CIO IOCB #1 ($0350)
-    ldx #$10
-    lda #$0c                    ; CLOSE
-    sta ATARI_ICCOM
-    jsr ATARI_CIOV
+    ; Swap DOS 2.5 back into $0800-$1FFF and read "D:HOBBIDATA" into save_ram_buf
+    jsr dos_bank_in
+    jsr cio_close_iocb
 
     ldx #$10
     lda #<atari_fn_disk
     sta ATARI_ICBAL
     lda #>atari_fn_disk
     sta ATARI_ICBAH
-    lda io_mode
-    beq @+
-    lda #$08                    ; ICAX1 = $08 (write)
-    jmp @+1
-@   lda #$04                    ; ICAX1 = $04 (read)
-@   sta ATARI_ICAX1
+    lda #$04                    ; ICAX1 = $04 (read)
+    sta ATARI_ICAX1
     lda #$00
     sta ATARI_ICAX2
     lda #$03                    ; OPEN
     sta ATARI_ICCOM
     jsr ATARI_CIOV
-    bmi @+                      ; If no DOS/disk/file, fall back to RAM buffer
+    bmi @+                      ; If file/disk not found, keep existing save_ram_buf
+
+    ldx #$10
+    lda #$07                    ; GET BYTES
+    sta ATARI_ICCOM
+    lda #<save_ram_buf
+    sta ATARI_ICBAL
+    lda #>save_ram_buf
+    sta ATARI_ICBAH
+    lda #$ff
+    sta ATARI_ICBLL
     lda #$01
-    sta cio_active
+    sta ATARI_ICBLH
+    jsr ATARI_CIOV
+    jsr cio_close_iocb
+    lda #$01
+    sta save_ram_valid
+@   jsr dos_bank_out
 @   rts
 
 .def :atari_chkin
@@ -604,17 +620,55 @@ pokey_shifted_table:
 .def :atari_close
     lda #$00
     sta io_channel
-    lda cio_active
-    beq @+
+
+    ; Only perform disk CIO on Save (io_mode != $00) with Disk (io_device == $08)
+    lda io_device
+    cmp #$08
+    bne @+1
+    lda io_mode
+    beq @+1
+
+    ; Swap DOS 2.5 back into $0800-$1FFF and write save_ram_buf to "D:HOBBIDATA"
+    jsr dos_bank_in
+    jsr cio_close_iocb
+
+    ldx #$10
+    lda #<atari_fn_disk
+    sta ATARI_ICBAL
+    lda #>atari_fn_disk
+    sta ATARI_ICBAH
+    lda #$08                    ; ICAX1 = $08 (write)
+    sta ATARI_ICAX1
+    lda #$00
+    sta ATARI_ICAX2
+    lda #$03                    ; OPEN
+    sta ATARI_ICCOM
+    jsr ATARI_CIOV
+    bmi @+
+
+    ldx #$10
+    lda #$0b                    ; PUT BYTES
+    sta ATARI_ICCOM
+    lda #<save_ram_buf
+    sta ATARI_ICBAL
+    lda #>save_ram_buf
+    sta ATARI_ICBAH
+    lda #$ff
+    sta ATARI_ICBLL
+    lda #$01
+    sta ATARI_ICBLH
+    jsr ATARI_CIOV
+    jsr cio_close_iocb
+@   jsr dos_bank_out
+@   rts
+
+cio_close_iocb:
     ldx #$10
     lda #$0c                    ; CLOSE
     sta ATARI_ICCOM
-    jsr ATARI_CIOV
-    lda #$00
-    sta cio_active
-@   rts
+    jmp ATARI_CIOV
 
-; Write byte in chrout_save_a to save stream (both RAM buffer and CIO if open)
+; Write byte in chrout_save_a to save_ram_buf
 atari_io_put_byte:
     ldy #$00
     lda chrout_save_a
@@ -622,34 +676,13 @@ atari_io_put_byte:
     inc io_ram_ptr_lo
     bne @+
     inc io_ram_ptr_hi
-@   lda cio_active
-    beq @+
-    ldx #$10
-    lda #$0b                    ; PUT BYTES
-    sta ATARI_ICCOM
-    lda #$00
-    sta ATARI_ICBLL
-    sta ATARI_ICBLH
-    lda chrout_save_a
-    jsr ATARI_CIOV
 @   rts
 
-; Read byte from load stream into A (preserves X and Y)
+; Read byte from save_ram_buf into A (preserves X and Y)
 .def :atari_chrin
     stx chrin_save_x
     sty chrin_save_y
-    lda cio_active
-    beq @+
-    ldx #$10
-    lda #$07                    ; GET BYTES
-    sta ATARI_ICCOM
-    lda #$00
-    sta ATARI_ICBLL
-    sta ATARI_ICBLH
-    jsr ATARI_CIOV
-    bmi @+
-    jmp @+2
-@   lda save_ram_valid
+    lda save_ram_valid
     beq @+
     ldy #$00
     lda (io_ram_ptr_lo),y
@@ -657,11 +690,60 @@ atari_io_put_byte:
     bne @+1
     inc io_ram_ptr_hi
     jmp @+1
-@   ; If user selected load before any save exists, return $FE sentinel after header
+@   ; Fallback sentinel if save_ram_buf is not valid
     lda #$fe
 @   ldx chrin_save_x
     ldy chrin_save_y
     rts
+
+; Bank Atari DOS 2.5 ($7000-$87FF) in and out of low RAM ($0800-$1FFF)
+dos_bank_in:
+    lda #$e0
+    sta ATARI_CHBAS
+    sta ATARI_CHBASE
+    jmp swap_low_ram
+
+dos_bank_out:
+    jsr swap_low_ram
+    lda #$08
+    sta ATARI_CHBAS
+    sta ATARI_CHBASE
+    rts
+
+swap_low_ram:
+    lda #$00
+    sta zp_ptr_lo
+    sta zp_aux_lo
+    lda #$08
+    sta zp_ptr_hi
+    lda #$70
+    sta zp_aux_hi
+    ldx #24
+    ldy #$00
+@   lda (zp_ptr_lo),y
+    pha
+    lda (zp_aux_lo),y
+    sta (zp_ptr_lo),y
+    pla
+    sta (zp_aux_lo),y
+    iny
+    bne @-
+    inc zp_ptr_hi
+    inc zp_aux_hi
+    dex
+    bne @-
+    rts
+
+; Entry point executed after XEX / AUTORUN.SYS segments finish loading
+atari_boot_entry:
+    ; Mirror $1F9A-$1FFF into $879A-$87FF before swapping $0800-$1FFF <-> $7000-$87FF
+    ldx #$9a
+@   lda $1f00,x
+    sta $8700,x
+    inx
+    bne @-
+    jsr swap_low_ram
+    jmp boot_stage_one
 
 atari_fn_disk:
     dta c'D:HOBBIDATA', $9b
@@ -685,8 +767,7 @@ chrin_save_y:   dta $00
 io_channel:     dta $00
 io_device:      dta $00
 io_mode:        dta $00
-cio_active:     dta $00
 save_ram_valid: dta $00
 
-    run boot_stage_one
+    run atari_boot_entry
 .endm

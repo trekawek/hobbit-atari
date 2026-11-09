@@ -17,6 +17,9 @@ zp_aux_hi = $6c
     dta a($0801)
 .endm
 
+.macro END_LOW_RAM_SEGMENT
+.endm
+
 .macro PROGRAM_FOOTER
 .endm
 
