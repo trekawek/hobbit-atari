@@ -32,14 +32,14 @@ ATARI_COLOR2    = $02c6
 ATARI_COLOR4    = $02c8
 ATARI_CHBAS     = $02f4
 ATARI_CH        = $02fc
-ATARI_IOCB1     = $0310
-ATARI_ICCOM     = $0312
-ATARI_ICBAL     = $0314
-ATARI_ICBAH     = $0315
-ATARI_ICBLL     = $0318
-ATARI_ICBLH     = $0319
-ATARI_ICAX1     = $031a
-ATARI_ICAX2     = $031b
+ATARI_IOCB1     = $0350
+ATARI_ICCOM     = $0352
+ATARI_ICBAL     = $0354
+ATARI_ICBAH     = $0355
+ATARI_ICBLL     = $0358
+ATARI_ICBLH     = $0359
+ATARI_ICAX1     = $035a
+ATARI_ICAX2     = $035b
 ATARI_COLPF1    = $d017
 ATARI_COLPF2    = $d018
 ATARI_COLBK     = $d01a
@@ -204,7 +204,50 @@ atari_dlist:
     ; Clear keyboard buffer
     lda #$ff
     sta ATARI_CH
-    cli
+
+    ; Populate default initial save state in save_ram_buf ($A800) on first boot
+    lda save_ram_valid
+    bne @+4
+    inc save_ram_valid
+    ldx #$0d
+@   lda default_save_hdr,x
+    sta save_ram_buf,x
+    dex
+    bpl @-
+    jsr atari_ramon
+    lda $c00e
+    sta ZP_69
+    lda $c00f
+    sta ZP_6A
+    lda #<[save_ram_buf+14]
+    sta io_ram_ptr_lo
+    lda #>[save_ram_buf+14]
+    sta io_ram_ptr_hi
+@   ldy #$00
+    lda (ZP_69),y
+    sta (io_ram_ptr_lo),y
+    cmp #$fe
+    beq @+2
+@   lda (ZP_69),y
+    sta (io_ram_ptr_lo),y
+    iny
+    cpy #$08
+    bne @-
+    clc
+    lda ZP_69
+    adc #$08
+    sta ZP_69
+    bcc @+
+    inc ZP_6A
+@   clc
+    lda io_ram_ptr_lo
+    adc #$08
+    sta io_ram_ptr_lo
+    bcc @-2
+    inc io_ram_ptr_hi
+    jmp @-2
+@   jsr atari_romon
+@   cli
     rts
 
 ; Memory Banking ($C000-$CFFF RAM under Atari OS ROM)
@@ -509,27 +552,23 @@ pokey_shifted_table:
     lda #$00
     sta cio_active
 
-    ; Close IOCB #1 first in case it was open
+    ; For tape ($01), use in-memory save_ram_buf directly (avoids OS C: blocking)
+    lda io_device
+    cmp #$08
+    bne @+2
+
+    ; For disk ($08), try opening "D:HOBBIDATA" via CIO IOCB #1 ($0350)
     ldx #$10
     lda #$0c                    ; CLOSE
     sta ATARI_ICCOM
     jsr ATARI_CIOV
 
-    ; Choose filename "D:HOBBIDATA" (disk) or "C:" (tape)
     ldx #$10
-    lda io_device
-    cmp #$08
-    beq @+
-    lda #<atari_fn_tape
-    sta ATARI_ICBAL
-    lda #>atari_fn_tape
-    sta ATARI_ICBAH
-    jmp @+1
-@   lda #<atari_fn_disk
+    lda #<atari_fn_disk
     sta ATARI_ICBAL
     lda #>atari_fn_disk
     sta ATARI_ICBAH
-@   lda io_mode
+    lda io_mode
     beq @+
     lda #$08                    ; ICAX1 = $08 (write)
     jmp @+1
@@ -540,7 +579,7 @@ pokey_shifted_table:
     lda #$03                    ; OPEN
     sta ATARI_ICCOM
     jsr ATARI_CIOV
-    bmi @+                      ; If no DOS/disk/tape, fall back to RAM buffer
+    bmi @+                      ; If no DOS/disk/file, fall back to RAM buffer
     lda #$01
     sta cio_active
 @   rts
@@ -626,8 +665,12 @@ atari_io_put_byte:
 
 atari_fn_disk:
     dta c'D:HOBBIDATA', $9b
-atari_fn_tape:
-    dta c'C:', $9b
+
+; Default 14-byte savegame header (initial game state for Room 1)
+default_save_hdr:
+    dta $02, $00, $00, $00, $00, $00, $00, $00 ; turn_wait_cnt ($2D0F..$2D16)
+    dta $00, $b4, $00, $00, $00                ; hunger_lo/hi ($2D17..$2D1B)
+    dta $01                                    ; current_room ($2D07)
 
 ; Atari Adapter State Variables
 cursor_row:     dta $00
