@@ -1,4 +1,4 @@
-MADS ?= $(shell which mads 2>/dev/null || echo /home/newton/bin/mads)
+MADS ?= $(shell which mads 2>/dev/null || ([ -x $(HOME)/bin/mads ] && echo $(HOME)/bin/mads) || echo mads)
 BUILD_DIR = build
 SRC_DIR = src
 
