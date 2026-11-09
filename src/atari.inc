@@ -73,9 +73,9 @@ ATARI_CIOV      = $e456
 ; 16-bit pointer increment
 .macro INCPTR zp
     inc :zp
-    bne @+
+    bne skip
     inc :zp+1
-@
+skip
 .endm
 
 ; Initialize Atari ANTIC 40x25 display list, custom font at $0800, and PORTB
@@ -276,12 +276,11 @@ chrout_screen:
     jmp chrout_done
 
 @   cmp #$91                    ; Cursor up
-    bne @+
+    bne @+1
     lda cursor_row
-    beq chrout_done_up
+    beq @+
     dec cursor_row
-chrout_done_up:
-    jmp chrout_done
+@   jmp chrout_done
 
 @   cmp #$1d                    ; Cursor right
     bne @+
@@ -321,24 +320,21 @@ chrout_printable:
     cmp #$40
     bcc chrout_sc_ready         ; $20-$3F -> $20-$3F
     cmp #$60
-    bcs chrout_ge_60
+    bcs @+
     sec
     sbc #$40                    ; $40-$5F -> $00-$1F
     jmp chrout_sc_ready
-chrout_ge_60:
-    cmp #$80
-    bcs chrout_ge_a0
+@   cmp #$80
+    bcs @+
     sec
     sbc #$20                    ; $60-$7F -> $40-$5F
     jmp chrout_sc_ready
-chrout_ge_a0:
-    cmp #$c0
-    bcs chrout_ge_c0
+@   cmp #$c0
+    bcs @+
     sec
     sbc #$40                    ; $A0-$BF -> $60-$7F
     jmp chrout_sc_ready
-chrout_ge_c0:
-    and #$7f                    ; $C0-$FE -> $40-$7E
+@   and #$7f                    ; $C0-$FE -> $40-$7E
 
 chrout_sc_ready:
     jsr atari_put_at_cursor
@@ -364,13 +360,12 @@ atari_clear_screen:
     sta inst_flag
     ldx #$00
     lda #$20
-clr_scr_loop:
-    sta atari_screen+$000,x
+@   sta atari_screen+$000,x
     sta atari_screen+$100,x
     sta atari_screen+$200,x
     sta atari_screen+$2e8,x
     inx
-    bne clr_scr_loop
+    bne @-
     rts
 
 ; Write screen code in A to atari_screen[cursor_row * 40 + cursor_col]
@@ -398,57 +393,49 @@ atari_advance_cursor:
 
 atari_cursor_left:
     lda cursor_col
-    bne cur_left_dec
+    bne @+1
     lda cursor_row
-    beq cur_left_done
+    beq @+
     dec cursor_row
     lda #39
     sta cursor_col
-cur_left_done:
-    rts
-cur_left_dec:
-    dec cursor_col
+@   rts
+@   dec cursor_col
     rts
 
 atari_newline:
     inc cursor_row
     lda cursor_row
     cmp #25
-    bcc nl_done
+    bcc @+5
     lda #24
     sta cursor_row
     ; Scroll 25-row screen ($BC00-$BFE7) up by 1 row (40 bytes) sequentially
     ldx #$00
-nl_scroll_0:
-    lda atari_screen+40,x
+@   lda atari_screen+40,x
     sta atari_screen,x
     inx
-    bne nl_scroll_0
-nl_scroll_1:
-    lda atari_screen+$100+40,x
+    bne @-
+@   lda atari_screen+$100+40,x
     sta atari_screen+$100,x
     inx
-    bne nl_scroll_1
-nl_scroll_2:
-    lda atari_screen+$200+40,x
+    bne @-
+@   lda atari_screen+$200+40,x
     sta atari_screen+$200,x
     inx
-    bne nl_scroll_2
-nl_scroll_3:
-    lda atari_screen+$300+40,x
+    bne @-
+@   lda atari_screen+$300+40,x
     sta atari_screen+$300,x
     inx
     cpx #$c0                    ; $300 + $C0 = $3C0 (960 bytes)
-    bcc nl_scroll_3
+    bcc @-
     ; Clear bottom row (row 24: $BC00 + 960 = $BFC0..$BFE7)
     lda #$20
     ldx #39
-nl_clr_bot:
-    sta atari_screen+960,x
+@   sta atari_screen+960,x
     dex
-    bpl nl_clr_bot
-nl_done:
-    rts
+    bpl @-
+@   rts
 
 ; Lookup table for row start addresses ($BC00 + row * 40)
 row_addr_lo:
@@ -462,24 +449,22 @@ row_addr_hi:
 .def :atari_getin
     lda ATARI_CH
     cmp #$ff
-    bne getin_has_key
+    bne @+
     lda #$00
     rts
-getin_has_key:
-    stx getin_save_x
+@   stx getin_save_x
     pha
     lda #$ff
     sta ATARI_CH
     pla
     cmp #$40
-    bcs getin_shifted
+    bcs @+
     tax
     lda pokey_unshifted_table,x
     ldx getin_save_x
     cmp #$00
     rts
-getin_shifted:
-    and #$3f
+@   and #$3f
     tax
     lda pokey_shifted_table,x
     ldx getin_save_x
@@ -534,36 +519,31 @@ pokey_shifted_table:
     ldx #$10
     lda io_device
     cmp #$08
-    beq open_use_disk
+    beq @+
     lda #<atari_fn_tape
     sta ATARI_ICBAL
     lda #>atari_fn_tape
     sta ATARI_ICBAH
-    jmp open_set_dir
-open_use_disk:
-    lda #<atari_fn_disk
+    jmp @+1
+@   lda #<atari_fn_disk
     sta ATARI_ICBAL
     lda #>atari_fn_disk
     sta ATARI_ICBAH
-open_set_dir:
-    lda io_mode
-    beq open_for_read
+@   lda io_mode
+    beq @+
     lda #$08                    ; ICAX1 = $08 (write)
-    jmp open_do_ciov
-open_for_read:
-    lda #$04                    ; ICAX1 = $04 (read)
-open_do_ciov:
-    sta ATARI_ICAX1
+    jmp @+1
+@   lda #$04                    ; ICAX1 = $04 (read)
+@   sta ATARI_ICAX1
     lda #$00
     sta ATARI_ICAX2
     lda #$03                    ; OPEN
     sta ATARI_ICCOM
     jsr ATARI_CIOV
-    bmi open_done               ; If no DOS/disk/tape, fall back to RAM buffer
+    bmi @+                      ; If no DOS/disk/tape, fall back to RAM buffer
     lda #$01
     sta cio_active
-open_done:
-    rts
+@   rts
 
 .def :atari_chkin
     lda #$01
@@ -586,15 +566,14 @@ open_done:
     lda #$00
     sta io_channel
     lda cio_active
-    beq close_done
+    beq @+
     ldx #$10
     lda #$0c                    ; CLOSE
     sta ATARI_ICCOM
     jsr ATARI_CIOV
     lda #$00
     sta cio_active
-close_done:
-    rts
+@   rts
 
 ; Write byte in chrout_save_a to save stream (both RAM buffer and CIO if open)
 atari_io_put_byte:
@@ -605,7 +584,7 @@ atari_io_put_byte:
     bne @+
     inc io_ram_ptr_hi
 @   lda cio_active
-    beq io_put_done
+    beq @+
     ldx #$10
     lda #$0b                    ; PUT BYTES
     sta ATARI_ICCOM
@@ -614,15 +593,14 @@ atari_io_put_byte:
     sta ATARI_ICBLH
     lda chrout_save_a
     jsr ATARI_CIOV
-io_put_done:
-    rts
+@   rts
 
 ; Read byte from load stream into A (preserves X and Y)
 .def :atari_chrin
     stx chrin_save_x
     sty chrin_save_y
     lda cio_active
-    beq chrin_from_ram
+    beq @+
     ldx #$10
     lda #$07                    ; GET BYTES
     sta ATARI_ICCOM
@@ -630,22 +608,19 @@ io_put_done:
     sta ATARI_ICBLL
     sta ATARI_ICBLH
     jsr ATARI_CIOV
-    bmi chrin_from_ram
-    jmp chrin_done
-chrin_from_ram:
-    lda save_ram_valid
-    beq chrin_no_save
+    bmi @+
+    jmp @+2
+@   lda save_ram_valid
+    beq @+
     ldy #$00
     lda (io_ram_ptr_lo),y
     inc io_ram_ptr_lo
-    bne chrin_done
+    bne @+1
     inc io_ram_ptr_hi
-    jmp chrin_done
-chrin_no_save:
-    ; If user selected load before any save exists, return $FE sentinel after header
+    jmp @+1
+@   ; If user selected load before any save exists, return $FE sentinel after header
     lda #$fe
-chrin_done:
-    ldx chrin_save_x
+@   ldx chrin_save_x
     ldy chrin_save_y
     rts
 

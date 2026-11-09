@@ -56,11 +56,11 @@ basic_stub:
 ; Stage-2 bootstrap embedded in character $08-$09 ($0840-$084D), copied to $0400
 boot_stage2:
     ldx #$00
-L0842:
+@
     lda font_backup,x
     sta $0800,x
     inx
-    bne L0842
+    bne @-
     jmp start
     dta $3c, $00
 
@@ -74,11 +74,11 @@ L0842:
 ; Stage-1 bootstrap embedded in character $10-$11 ($0880-$088D, SYS 2176)
 boot_stage1:
     ldx #$10
-L0882:
+@
     lda boot_stage2,x
     sta $0400,x
     dex
-    bpl L0882
+    bpl @-
     jmp $0400
     dta $0e, $00
 
@@ -1069,16 +1069,16 @@ port_save:
     dta $38
 describe_room:
     ldx #$00
-L2D94:
+@
     lda dark_rooms_table,x
-    beq L2DA2
+    beq @+1
     cmp current_room
-    bne L2D9F
+    bne @+
     rts
-L2D9F:
+@
     inx
-    bne L2D94
-L2DA2:
+    bne @-1
+@
     lda #$00
     sta print_hdr_flag
     sta temp_dir_idx
@@ -1118,22 +1118,22 @@ L2DA2:
     sta ZP_6A
     lda #$00
     sta gram_case
-L2DFE:
+@
     ldy temp_dir_idx
     lda (ZP_69),y
-    beq L2E38
+    beq @+1
     lda ZP_69
     pha
     lda ZP_6A
     pha
     ROMON
     lda print_hdr_flag
-    bne L2E20
+    bne @+
     ldx #<msg_19d8
     ldy #>msg_19d8
     jsr print_string
     inc print_hdr_flag
-L2E20:
+@
     jsr print_direction_name
     lda #$0d
     CHROUT
@@ -1142,11 +1142,11 @@ L2E20:
     pla
     sta ZP_69
     RAMON
-L2E38:
+@
     inc temp_dir_idx
     lda temp_dir_idx
     cmp #$0a
-    bne L2DFE
+    bne @-2
     ROMON
     rts
 print_direction_name:
@@ -1179,9 +1179,9 @@ get_object_ptr:
     sta ZP_69
     lda $0d07
     sta ZP_6A
-L2E93:
+@
     dex
-    beq L2EA6
+    beq @+
     clc
     lda ZP_69
     adc #$08
@@ -1189,68 +1189,68 @@ L2E93:
     lda ZP_6A
     adc #$00
     sta ZP_6A
-    jmp L2E93
-L2EA6:
+    jmp @-
+@
     ROMON
     rts
-L2EAD:
+sub_2ead:
     lda print_hdr_flag
-    bne L2EBC
+    bne @+
     inc print_hdr_flag
     ldx #<msg_19e5
     ldy #>msg_19e5
     jsr print_string
-L2EBC:
+@
     rts
 list_room_objects:
     ldx #$00
-L2EBF:
+@
     lda dark_rooms_table,x
-    beq L2ECD
+    beq @+1
     cmp current_room
-    bne L2ECA
+    bne @+
     rts
-L2ECA:
+@
     inx
-    bne L2EBF
-L2ECD:
+    bne @-1
+@
     lda #$00
     sta temp_obj_idx
     sta print_hdr_flag
     inc temp_obj_idx
     lda #$03
     sta gram_case
-L2EDD:
+@
     lda temp_obj_idx
     jsr get_object_ptr
     ldy #$00
     jsr read_bank_byte
     cmp #$fe
-    bne L2EED
+    bne @+
     rts
-L2EED:
+@
     ldy #$05
     jsr read_bank_byte
     and #$60
-    bne L2F17
+    bne @+1
     ldy #$03
     jsr read_bank_byte
     cmp current_room
-    beq L2F09
+    beq @+
     iny
     jsr read_bank_byte
     cmp current_room
-    bne L2F17
-L2F09:
-    jsr L2EAD
+    bne @+1
+@
+    jsr sub_2ead
     lda temp_obj_idx
-    jsr L2F1D
+    jsr sub_2f1d
     lda #$0d
     CHROUT
-L2F17:
+@
     inc temp_obj_idx
-    jmp L2EDD
-L2F1D:
+    jmp @-3
+sub_2f1d:
     sta $2d0c
     jsr get_object_ptr
     ldy #$06
@@ -1258,114 +1258,114 @@ L2F1D:
     sta $2d0e
     lda $2d0c
     jsr print_object_name
-    jsr L2FAC
+    jsr sub_2fac
     lda $2d0e
     pha
     lda $2d0c
-    jsr L3006
+    jsr sub_3006
     pla
     sta $2d0e
     and #$54
     cmp #$04
-    beq L2F54
+    beq @+
     cmp #$54
-    beq L2F54
+    beq @+
     lda $2d0e
     and #$80
-    bne L2F54
+    bne @+
     rts
-L2F54:
+@
     lda $2d0e
-    bmi L2F5E
+    bmi @+
     lda #$40
-    jmp L2F60
-L2F5E:
+    jmp @+1
+@
     lda #$20
-L2F60:
+@
     sta $2d0e
     lda #$01
     sta $2d0b
     lda #$00
     sta $2d0d
-L2F6D:
+@
     lda $2d0b
     jsr get_object_ptr
     ldy #$00
     jsr read_bank_byte
     cmp #$fe
-    bne L2F7D
+    bne @+
     rts
-L2F7D:
+@
     ldy #$05
     jsr read_bank_byte
     and #$60
     cmp $2d0e
-    bne L2FA6
+    bne @+
     ldy #$03
     jsr read_bank_byte
     cmp $2d0c
-    bne L2FA6
-    jsr L305A
+    bne @+
+    jsr sub_305a
     lda #$20
     CHROUT
     lda #$20
     CHROUT
     lda $2d0b
     jsr print_object_name
-L2FA6:
+@
     inc $2d0b
-    jmp L2F6D
-L2FAC:
+    jmp @-2
+sub_2fac:
     lda temp_obj_idx
     jsr get_object_ptr
     ldy #$05
     jsr read_bank_byte
     and #$60
-    beq L2FBC
-L2FBB:
+    beq @+1
+@
     rts
-L2FBC:
+@
     jsr read_bank_byte
     sta temp_dir_idx
-    bmi L2FBB
+    bmi @-1
     ldy #$03
     jsr read_bank_byte
     cmp current_room
-    beq L2FEB
+    beq @+1
     iny
     jsr read_bank_byte
     cmp current_room
-    bne L2FBB
+    bne @-1
     lda temp_dir_idx
     cmp #$08
-    bcs L2FE6
+    bcs @+
     eor #$04
     sta temp_dir_idx
-    jmp L2FEB
-L2FE6:
+    jmp @+1
+@
     eor #$01
     sta temp_dir_idx
-L2FEB:
+@
     lda #$02
     sta $2c73
     lda #$00
     sta $2cb9
-    jsr L3418
+    jsr sub_3418
     lda #$05
     sta gram_case
     jsr print_direction_name
     lda #$03
     sta gram_case
     rts
-L3006:
+sub_3006:
     sta $2d0c
     jsr get_object_ptr
     ldy #$06
     jsr read_bank_byte
     and #$50
-    bne L3016
+    bne @+
     rts
-L3016:
+@
     pha
     lda #$00
     sta gram_case
@@ -1377,34 +1377,34 @@ L3016:
     jsr print_object_name
     lda $2c77
     cmp #$04
-    bcc L303D
+    bcc @+
     ldx #<msg_1a2b
     ldy #>msg_1a2b
     jsr print_string
-    jmp L3044
-L303D:
+    jmp @+1
+@
     ldx #<msg_1a2f
     ldy #>msg_1a2f
     jsr print_string
-L3044:
+@
     pla
     and #$10
-    beq L304C
+    beq @+
     lda #$02
     dta $2c ; BIT abs trick to skip next 2-byte instruction
-L304C:
+@
     lda #$03
     sta $2c73
-    jsr L31B4
+    jsr sub_31b4
     lda #$03
     sta gram_case
     rts
-L305A:
+sub_305a:
     lda $2d0d
-    beq L3064
+    beq @+
     lda #$0d
     CHROUT_JMP
-L3064:
+@
     inc $2d0d
     lda #$0d
     CHROUT
@@ -1412,7 +1412,7 @@ L3064:
     CHROUT
     lda $2d0e
     cmp #$40
-    bne L309A
+    bne @+
     lda #$57
     CHROUT
     lda #$20
@@ -1427,7 +1427,7 @@ L3064:
     ldy #>msg_19e6
     jsr print_string
     rts
-L309A:
+@
     lda #$00
     sta gram_case
     lda $2d0c
@@ -1447,28 +1447,28 @@ L30B7:
     lda $c001
     sta ZP_6A
     ldx $2c73
-L30CE:
+@
     cpx #$00
-    beq L30F2
+    beq @+1
     ldy #$00
-L30D4:
+@
     lda (ZP_69),y
     INCPTR ZP_69
     cmp #$3a
-    bne L30D4
+    bne @-
     INCPTR ZP_69
     INCPTR ZP_69
     dex
-    bne L30CE
-L30F2:
+    bne @-1
+@
     ldy #$00
-L30F4:
+@
     lda (ZP_69),y
     cmp #$3a
-    beq L30FD
+    beq @+
     iny
-    bne L30F4
-L30FD:
+    bne @-
+@
     sty $2c76
     iny
     lda (ZP_69),y
@@ -1487,35 +1487,35 @@ L30FD:
     ldx $2c75
     dex
     cpx #$00
-    beq L3138
-L3126:
+    beq @+1
+@
     ldy #$00
     lda (ZP_69),y
     INCPTR ZP_69
     cmp #$00
-    bne L3126
+    bne @-
     dex
-    bne L3126
-L3138:
+    bne @-
+@
     ldx gram_case
     ldy #$00
     cpx #$00
-    beq L3153
-L3141:
+    beq @+1
+@
     lda (ZP_69),y
     INCPTR ZP_69
     cmp #$2d
-    bne L3141
+    bne @-
     dex
-    bne L3141
+    bne @-
     ldy #$00
-L3153:
+@
     lda (ZP_69),y
     cmp #$2d
-    beq L315C
+    beq @+
     iny
-    bne L3153
-L315C:
+    bne @-
+@
     tya
     clc
     adc $2c76
@@ -1535,63 +1535,63 @@ L315C:
     clc
     adc $2c76
     cmp #$25
-    bcc L318A
+    bcc @+
     lda #$0d
     CHROUT
-L318A:
+@
     ldy #$00
-L318C:
+@
     jsr read_bank_byte
     cmp #$3a
-    beq L3199
+    beq @+
     CHROUT
     iny
-    bne L318C
-L3199:
+    bne @-
+@
     pla
     sta ZP_6A
     pla
     sta ZP_69
     ldy #$00
-L31A1:
+@
     jsr read_bank_byte
     cmp #$2d
-    beq L31AE
+    beq @+
     CHROUT
     iny
-    bne L31A1
-L31AE:
+    bne @-
+@
     lda #$20
     CHROUT
     rts
-L31B4:
+sub_31b4:
     RAMON
     lda $c004
     sta ZP_69
     lda $c005
     sta ZP_6A
     ldx $2c73
-L31CB:
+@
     cpx #$00
-    beq L31E8
+    beq @+1
     ldy #$00
-L31D1:
+@
     lda (ZP_69),y
     INCPTR ZP_69
     cmp #$3a
-    bne L31D1
+    bne @-
     INCPTR ZP_69
     dex
-    bne L31CB
-L31E8:
+    bne @-1
+@
     ldy #$00
-L31EA:
+@
     lda (ZP_69),y
     cmp #$3a
-    beq L31F3
+    beq @+
     iny
-    bne L31EA
-L31F3:
+    bne @-
+@
     sty $2c76
     iny
     lda (ZP_69),y
@@ -1607,16 +1607,16 @@ L31F3:
     ldx $2c75
     dex
     cpx #$00
-    beq L3228
-L3216:
+    beq @+1
+@
     ldy #$00
     lda (ZP_69),y
     INCPTR ZP_69
     cmp #$00
-    bne L3216
+    bne @-
     dex
-    bne L3216
-L3228:
+    bne @-
+@
     lda $2c77
     asl @
     asl @
@@ -1627,23 +1627,23 @@ L3228:
     adc gram_case
     tax
     cpx #$00
-    beq L324F
+    beq @+1
     ldy #$00
-L323D:
+@
     lda (ZP_69),y
     INCPTR ZP_69
     cmp #$2d
-    bne L323D
+    bne @-
     dex
-    bne L323D
+    bne @-
     ldy #$00
-L324F:
+@
     lda (ZP_69),y
     cmp #$2d
-    beq L3258
+    beq @+
     iny
-    bne L324F
-L3258:
+    bne @-
+@
     tya
     clc
     adc $2c76
@@ -1663,64 +1663,64 @@ L3258:
     clc
     adc $2c76
     cmp #$25
-    bcc L3286
+    bcc @+
     lda #$0d
     CHROUT
-L3286:
+@
     ldy #$00
-L3288:
+@
     jsr read_bank_byte
     cmp #$3a
-    beq L3295
+    beq @+
     CHROUT
     iny
-    bne L3288
-L3295:
+    bne @-
+@
     pla
     sta ZP_6A
     pla
     sta ZP_69
     ldy #$00
-L329D:
+@
     jsr read_bank_byte
     cmp #$2d
-    beq L32AA
+    beq @+
     CHROUT
     iny
-    bne L329D
-L32AA:
+    bne @-
+@
     lda #$20
     CHROUT
     rts
-L32B0:
+sub_32b0:
     RAMON
     lda $c000
     sta ZP_69
     lda $c001
     sta ZP_6A
     ldx $2c73
-L32C7:
+@
     cpx #$00
-    beq L32EB
+    beq @+1
     ldy #$00
-L32CD:
+@
     lda (ZP_69),y
     INCPTR ZP_69
     cmp #$3a
-    bne L32CD
+    bne @-
     INCPTR ZP_69
     INCPTR ZP_69
     dex
-    bne L32C7
-L32EB:
+    bne @-1
+@
     ldy #$00
-L32ED:
+@
     lda (ZP_69),y
     cmp #$3a
-    beq L32F6
+    beq @+
     iny
-    bne L32ED
-L32F6:
+    bne @-
+@
     iny
     iny
     lda (ZP_69),y
@@ -1740,20 +1740,20 @@ lookup_word:
     sta ZP_6A
     ldy #$11
     lda #$00
-L3319:
+@
     sta word_idx,y
     dey
-    bne L3319
-L331F:
+    bne @-
+@
     lda (ZP_69),y
-    beq L332B
+    beq @+
     sta unknown_word_buf,y
     iny
     cpy #$10
-    bne L331F
-L332B:
+    bne @-
+@
     rts
-L332C:
+sub_332c:
     RAMON
     lda $c008
     sta ZP_69
@@ -1761,25 +1761,25 @@ L332C:
     sta ZP_6A
     lda #$ff
     sta $2c73
-L3345:
+@
     ldy #$00
     inc $2c73
     lda (ZP_69),y
-    bne L3357
+    bne @+
     ROMON
     lda #$ff
     rts
-L3357:
+@
     lda (ZP_69),y
     cmp unknown_word_buf,y
-    bne L337D
+    bne @+2
     iny
-    bne L3357
-L3361:
+    bne @-
+@
     lda unknown_word_buf,y
-    beq L3369
-    jmp L337D
-L3369:
+    beq @+
+    jmp @+1
+@
     iny
     lda (ZP_69),y
     pha
@@ -1789,18 +1789,18 @@ L3369:
     pla
     sta $14fd
     rts
-L337D:
+@
     cmp #$3a
-    beq L3361
+    beq @-2
     ldy #$00
-L3383:
+@
     lda (ZP_69),y
     INCPTR ZP_69
     cmp #$3a
-    bne L3383
+    bne @-
     INCPTR ZP_69
-    jmp L3345
-L339A:
+    jmp @-5
+sub_339a:
     RAMON
     lda $c00c
     sta ZP_69
@@ -1808,23 +1808,23 @@ L339A:
     sta ZP_6A
     lda #$ff
     sta $2c73
-L33B3:
+@
     ldy #$00
     inc $2c73
     lda (ZP_69),y
-    bne L33C5
+    bne @+
     ROMON
     lda #$ff
     rts
-L33C5:
+@
     lda (ZP_69),y
     cmp unknown_word_buf,y
-    bne L33F4
+    bne @+2
     iny
-    bne L33C5
-L33CF:
+    bne @-
+@
     lda unknown_word_buf,y
-    bne L33F4
+    bne @+1
     iny
     lda (ZP_69),y
     sta $14fd
@@ -1835,65 +1835,65 @@ L33CF:
     lda #$04
     sta word_match_buf
     lda $14fd
-    beq L33F3
+    beq @+
     inc word_match_buf
-L33F3:
+@
     rts
-L33F4:
+@
     cmp #$3a
-    beq L33CF
+    beq @-2
     ldy #$00
-L33FA:
+@
     lda (ZP_69),y
     INCPTR ZP_69
     cmp #$3a
-    bne L33FA
+    bne @-
     INCPTR ZP_69
     INCPTR ZP_69
-    jmp L33B3
-L3418:
+    jmp @-5
+sub_3418:
     RAMON
     lda $c00c
     sta ZP_69
     lda $c00d
     sta ZP_6A
-L342C:
+@
     ldy #$00
     lda (ZP_69),y
-    bne L3439
+    bne @+
     ROMON
     rts
-L3439:
+@
     ldy #$00
-L343B:
+@
     lda (ZP_69),y
     iny
     cmp #$3a
-    bne L343B
+    bne @-
     lda (ZP_69),y
     iny
     cmp $2c73
-    bne L3473
+    bne @+2
     lda (ZP_69),y
     cmp $2cb9
-    bne L3473
+    bne @+2
     dey
     dey
     sty $2c76
     ROMON
-    jsr L34F7
+    jsr sub_34f7
     ldy #$00
-L3461:
+@
     jsr read_bank_byte
     cmp #$3a
-    beq L346E
+    beq @+
     CHROUT
     iny
-    bne L3461
-L346E:
+    bne @-
+@
     lda #$20
     CHROUT_JMP
-L3473:
+@
     tya
     sec
     adc ZP_69
@@ -1901,8 +1901,8 @@ L3473:
     lda ZP_6A
     adc #$00
     sta ZP_6A
-    jmp L342C
-L3482:
+    jmp @-5
+sub_3482:
     RAMON
     lda $c00a
     sta ZP_69
@@ -1912,60 +1912,60 @@ L3482:
     sta ZP_6B
     ldy #$00
     lda ZP_6B
-    beq L34B4
-L34A1:
+    beq @+1
+@
     ldy #$00
     lda (ZP_69),y
     INCPTR ZP_69
     cmp #$00
-    bne L34A1
+    bne @-
     dec ZP_6B
-    bne L34A1
-L34B4:
+    bne @-
+@
     lda $2c8b
     sta ZP_6B
     lda ZP_6B
-    beq L34CE
-L34BD:
+    beq @+1
+@
     lda (ZP_69),y
     INCPTR ZP_69
     cmp #$2d
-    bne L34BD
+    bne @-
     dec ZP_6B
-    bne L34BD
-L34CE:
+    bne @-
+@
     lda (ZP_69),y
     cmp #$2d
-    beq L34D7
+    beq @+
     iny
-    bne L34CE
-L34D7:
+    bne @-
+@
     sty $2c76
     ROMON
-    jsr L34F7
+    jsr sub_34f7
     ldy #$00
-L34E5:
+@
     jsr read_bank_byte
     cmp #$2d
-    beq L34F2
+    beq @+
     CHROUT
     iny
-    bne L34E5
-L34F2:
+    bne @-
+@
     lda #$20
     CHROUT_JMP
-L34F7:
+sub_34f7:
     sec
     GETCOL
     txa
     adc $2c76
     cmp #$26
-    bcs L3504
+    bcs @+
     rts
-L3504:
+@
     lda #$0d
     CHROUT_JMP
-L3509:
+sub_3509:
     RAMON
     lda $c000
     sta ZP_69
@@ -1973,32 +1973,32 @@ L3509:
     sta ZP_6A
     lda #$ff
     sta $2c73
-L3522:
+@
     ldy #$00
     inc $2c73
     lda (ZP_69),y
-    bne L3534
+    bne @+
     ROMON
     lda #$ff
     rts
-L3534:
+@
     lda (ZP_69),y
     cmp #$3a
-    beq L3562
+    beq @+1
     cmp unknown_word_buf,y
-    bne L3542
+    bne @+
     iny
-    bne L3534
-L3542:
+    bne @-
+@
     ldy #$00
     lda (ZP_69),y
     INCPTR ZP_69
     cmp #$3a
-    bne L3542
+    bne @-
     INCPTR ZP_69
     INCPTR ZP_69
-    jmp L3522
-L3562:
+    jmp @-2
+@
     sty ZP_6B
     lda #$00
     sta ZP_6C
@@ -2012,54 +2012,54 @@ L3562:
     sta ZP_62
     ldy #$00
     ldx $2c75
-L3580:
+@
     dex
-    beq L3593
-L3583:
+    beq @+1
+@
     lda (ZP_61),y
     INCPTR ZP_61
     cmp #$00
-    bne L3583
-    jmp L3580
-L3593:
+    bne @-
+    jmp @-1
+@
     ldx ZP_6B
     ldy #$00
-L3597:
+@
     lda (ZP_61),y
     cmp #$2d
-    beq L35A7
+    beq @+
     cmp unknown_word_buf,x
-    bne L35B6
+    bne @+1
     iny
     inx
-    jmp L3597
-L35A7:
+    jmp @-
+@
     lda unknown_word_buf,x
-    bne L35B6
+    bne @+
     ldx gram_case
     lda bit_mask_table,x
     ora ZP_6C
     sta ZP_6C
-L35B6:
+@
     inc gram_case
     lda gram_case
     cmp #$07
-    beq L35D2
+    beq @+1
     ldy #$00
-L35C2:
+@
     lda (ZP_61),y
     INCPTR ZP_61
     cmp #$2d
-    bne L35C2
-    jmp L3593
-L35D2:
+    bne @-
+    jmp @-4
+@
     ROMON
     ldx ZP_6C
     cpx #$00
-    bne L35EB
+    bne @+
     RAMON
-    jmp L3542
-L35EB:
+    jmp @-9
+@
     lda #$01
     sta word_match_buf
     lda ZP_6C
@@ -2067,7 +2067,7 @@ L35EB:
     lda $2c73
     sta $14fd
     rts
-L35FC:
+sub_35fc:
     RAMON
     lda $c004
     sta ZP_69
@@ -2075,22 +2075,22 @@ L35FC:
     sta ZP_6A
     lda #$ff
     sta $2c73
-L3615:
+@
     ldy #$00
     inc $2c73
     lda (ZP_69),y
-    bne L3627
+    bne @+
     ROMON
     lda #$ff
     rts
-L3627:
+@
     lda (ZP_69),y
     cmp #$3a
-    beq L364E
+    beq @+
     cmp unknown_word_buf,y
     bne L3635
     iny
-    bne L3627
+    bne @-
 L3635:
     ldy #$00
     lda (ZP_69),y
@@ -2098,8 +2098,8 @@ L3635:
     cmp #$3a
     bne L3635
     INCPTR ZP_69
-    jmp L3615
-L364E:
+    jmp @-1
+@
     sty ZP_6B
     iny
     lda (ZP_69),y
@@ -2110,116 +2110,116 @@ L364E:
     sta ZP_62
     ldy #$00
     ldx $2c75
-L3665:
+@
     dex
-    beq L3678
-L3668:
+    beq @+1
+@
     lda (ZP_61),y
     INCPTR ZP_61
     cmp #$00
-    bne L3668
-    jmp L3665
-L3678:
+    bne @-
+    jmp @-1
+@
     lda #$00
     sta $1556
-L367D:
+@
     lda #$00
     sta gram_case
     sta ZP_6C
-L3684:
+@
     ldx ZP_6B
     ldy #$00
-L3688:
+@
     lda (ZP_61),y
     cmp #$2d
-    beq L3698
+    beq @+
     cmp unknown_word_buf,x
-    bne L36A7
+    bne @+1
     iny
     inx
-    jmp L3688
-L3698:
+    jmp @-
+@
     lda unknown_word_buf,x
-    bne L36A7
+    bne @+
     ldx gram_case
     lda bit_mask_table,x
     ora ZP_6C
     sta ZP_6C
-L36A7:
+@
     inc gram_case
     lda gram_case
     cmp #$07
-    beq L36C3
+    beq @+1
     ldy #$00
-L36B3:
+@
     lda (ZP_61),y
     INCPTR ZP_61
     cmp #$2d
-    bne L36B3
-    jmp L3684
-L36C3:
+    bne @-
+    jmp @-4
+@
     lda ZP_6C
     ldx $1556
     sta $14fe,x
     inc $1556
     lda $1556
     cmp #$06
-    beq L36E7
-L36D5:
+    beq @+1
+@
     ldy #$00
     lda (ZP_61),y
     INCPTR ZP_61
     cmp #$2d
-    bne L36D5
-    jmp L367D
-L36E7:
+    bne @-
+    jmp @-7
+@
     lda #$00
     ldx #$00
-L36EB:
+@
     ora $14fe,x
     inx
     cpx #$06
-    bne L36EB
+    bne @-
     cmp #$00
-    bne L36FA
+    bne @+
     jmp L3635
-L36FA:
+@
     ROMON
     lda #$02
     sta word_match_buf
     lda $2c73
     sta $14fd
     rts
-L370C:
-    jsr L3509
+sub_370c:
+    jsr sub_3509
     cmp #$ff
-    beq L3714
+    beq @+
     rts
-L3714:
-    jsr L35FC
+@
+    jsr sub_35fc
     cmp #$ff
-    beq L371C
+    beq @+
     rts
-L371C:
-    jsr L332C
+@
+    jsr sub_332c
     cmp #$ff
-    beq L3724
+    beq @+
     rts
-L3724:
-    jsr L339A
+@
+    jsr sub_339a
     cmp #$ff
-    beq L372C
+    beq @+
     rts
-L372C:
+@
     lda #$00
     sta word_match_buf
     rts
 check_word_valid:
-    jsr L370C
+    jsr sub_370c
     lda $14fd
     sta $2c73
     lda word_match_buf
-    bne L3757
+    bne @+
     ldx #<msg_1770
     ldy #>msg_1770
     jsr print_string
@@ -2230,7 +2230,7 @@ check_word_valid:
     ldy #>msg_1786
     jsr print_string
     lda #$ff
-L3757:
+@
     rts
 read_input_line:
     lda #$00
@@ -2238,21 +2238,21 @@ read_input_line:
     ldx #<str_prompt
     ldy #>str_prompt
     jsr print_string
-L3764:
+@
     jsr get_filtered_key
     cmp #$14
-    bne L377B
+    bne @+
     lda input_len
-    beq L3764
+    beq @-
     lda #$14
     CHROUT
     dec input_len
-    jmp L3764
-L377B:
+    jmp @-
+@
     cmp #$0d
-    bne L3799
+    bne @+
     lda input_len
-    beq L3764
+    beq @-1
     lda #$00
     ldx input_len
     sta input_line_buf,x
@@ -2260,11 +2260,11 @@ L377B:
     CHROUT
     lda #$0d
     CHROUT
-    jmp L37B6
-L3799:
+    jmp @+1
+@
     ldx input_len
     cpx #$4d
-    bcs L3764
+    bcs @-2
     pha
     lda #$94
     CHROUT
@@ -2273,36 +2273,36 @@ L3799:
     ldy input_len
     sta input_line_buf,y
     inc input_len
-    jmp L3764
-L37B6:
+    jmp @-2
+@
     lda #<abbrev_str_table
     sta ZP_69
     lda #>abbrev_str_table
     sta ZP_6A
     ldx #$00
-L37C0:
+@
     cpx #$0b
-    bne L37C7
-    jmp L3804
-L37C7:
+    bne @+
+    jmp @+5
+@
     ldy #$00
-L37C9:
+@
     lda (ZP_69),y
     cmp input_line_buf,y
-    bne L37D8
+    bne @+
     cmp #$00
-    beq L37EB
+    beq @+1
     iny
-    jmp L37C9
-L37D8:
+    jmp @-
+@
     ldy #$00
     lda (ZP_69),y
     INCPTR ZP_69
     cmp #$00
-    bne L37D8
+    bne @-
     inx
-    jmp L37C0
-L37EB:
+    jmp @-3
+@
     txa
     asl @
     tax
@@ -2311,85 +2311,85 @@ L37EB:
     lda $1718,x
     sta ZP_6A
     ldy #$00
-L37FA:
+@
     lda (ZP_69),y
     sta input_line_buf,y
     iny
     cmp #$00
-    bne L37FA
-L3804:
+    bne @-
+@
     rts
 print_string:
     stx ZP_69
     sty ZP_6A
     ldy #$00
-L380B:
+@
     lda (ZP_69),y
-    beq L3815
+    beq @+
     CHROUT
     iny
-    bne L380B
-L3815:
+    bne @-
+@
     rts
 get_filtered_key:
     inc rng_seed_lo
     GETIN
     cmp #$14
-    beq L3854
+    beq @+
     cmp #$0d
-    beq L3854
+    beq @+
     cmp #$40
-    beq L3854
+    beq @+
     cmp #$c1
-    beq L3854
+    beq @+
     cmp #$5c
-    beq L3854
+    beq @+
     cmp #$c5
-    beq L3854
+    beq @+
     cmp #$cf
-    beq L3854
+    beq @+
     cmp #$ce
-    beq L3854
+    beq @+
     cmp #$da
-    beq L3854
+    beq @+
     cmp #$c3
-    beq L3854
+    beq @+
     cmp #$d3
-    beq L3854
+    beq @+
     cmp #$20
-    beq L3854
+    beq @+
     cmp #$41
-    bcc L3855
+    bcc @+1
     cmp #$5b
     bcs get_filtered_key
-L3854:
+@
     rts
-L3855:
+@
     cmp #$30
     bcc get_filtered_key
     cmp #$3a
     bcs get_filtered_key
     rts
-L385E:
+sub_385e:
     ldx #<str_word_too_long
     ldy #>str_word_too_long
     jsr print_string
     rts
-L3866:
+sub_3866:
     lda input_line_buf
     cmp #$20
-    beq L386E
+    beq @+
     rts
-L386E:
+@
     ldx #$00
-L3870:
+@
     lda $1505,x
     sta input_line_buf,x
     inx
     cmp #$00
-    bne L3870
-    jmp L3866
-L387E:
+    bne @-
+    jmp sub_3866
+sub_387e:
     lda token_count
     asl @
     asl @
@@ -2401,91 +2401,91 @@ L387E:
     adc #$00
     sta ZP_6A
     ldy #$00
-L3891:
+@
     lda input_line_buf
-    beq L38BA
+    beq @+1
     cmp #$20
-    beq L38BA
+    beq @+1
     sta (ZP_69),y
     iny
     ldx #$00
-L389F:
+@
     lda $1505,x
     sta input_line_buf,x
     inx
     cmp #$00
-    bne L389F
+    bne @-
     cpy #$10
-    bne L3891
+    bne @-1
     lda input_line_buf
-    beq L38BA
+    beq @+
     cmp #$20
-    beq L38BA
+    beq @+
     lda #$01
     rts
-L38BA:
-    jsr L3866
+@
+    jsr sub_3866
     inc token_count
     lda #$00
     rts
 read_and_tokenize:
     jsr read_input_line
     ldy #$00
-L38C8:
+@
     lda #$00
     sta token_table,y
     iny
-    bne L38C8
+    bne @-
     lda #$00
     sta token_count
-    jsr L3866
+    jsr sub_3866
     lda input_line_buf
     beq read_and_tokenize
     lda #$00
     sta token_count
-L38E2:
-    jsr L387E
-    beq L38ED
-    jsr L385E
+@
+    jsr sub_387e
+    beq @+
+    jsr sub_385e
     jmp read_and_tokenize
-L38ED:
+@
     lda token_count
     cmp #$10
-    bne L3900
+    bne @+1
     lda input_line_buf
-    beq L38FF
-    jsr L3906
+    beq @+
+    jsr sub_3906
     jmp read_and_tokenize
-L38FF:
+@
     rts
-L3900:
+@
     lda input_line_buf
-    bne L38E2
+    bne @-3
     rts
-L3906:
+sub_3906:
     ldx #<str_sentence_too_long
     ldy #>str_sentence_too_long
     jmp print_string
-L390D:
+sub_390d:
     lda word_idx
     asl @
     asl @
     asl @
     tax
     ldy #$00
-L3916:
+@
     lda parsed_words_buf,x
     sta word_match_buf,y
     inx
     iny
     cpy #$10
-    bne L3916
+    bne @-
     lda word_match_buf
     rts
 parse_clause:
-    jsr L390D
+    jsr sub_390d
     cmp #$03
-    bne L3944
+    bne @+
     ldx clause_idx
     lda #$01
     sta $2c90,x
@@ -2495,7 +2495,7 @@ parse_clause:
     inc clause_idx
     lda #$00
     rts
-L3944:
+@
     ldx clause_idx
     lda #$02
     sta $2c90,x
@@ -2503,7 +2503,7 @@ L3944:
     sta $2c98,x
     lda word_match_buf
     cmp #$05
-    bne L3972
+    bne @+
     lda $14fd
     sta $2c98,x
     lda $14fe
@@ -2511,20 +2511,20 @@ L3944:
     inc word_idx
     lda word_idx
     cmp token_count
-    bcc L3972
+    bcc @+
     lda #$ff
     rts
-L3972:
+@
     ldx clause_idx
     lda $2cca
     sta $2cba,x
     lda #$ff
     sta $2cb8
-L3980:
-    jsr L39DF
-    bpl L3986
+@
+    jsr sub_39df
+    bpl @+
     rts
-L3986:
+@
     ldx $2cca
     lda cur_adj1
     sta $2ccb,x
@@ -2540,92 +2540,92 @@ L3986:
     sta $2cc2,x
     lda word_idx
     cmp token_count
-    bcc L39C6
-L39B3:
+    bcc @+2
+@
     lda #$00
     sta gram_case
     inc clause_idx
     lda $2cb8
-    bne L39C3
+    bne @+
     lda #$ff
     rts
-L39C3:
+@
     lda #$00
     rts
-L39C6:
-    jsr L390D
+@
+    jsr sub_390d
     lda word_match_buf
     cmp #$04
-    bne L39B3
+    bne @-2
     inc word_idx
     lda word_idx
     cmp token_count
-    bcs L39E7
-    jmp L3980
+    bcs @+
+    jmp @-4
     dta $00
-L39DF:
+sub_39df:
     lda word_idx
     cmp token_count
-    bcc L39EA
-L39E7:
+    bcc @+1
+@
     lda #$ff
     rts
-L39EA:
-    jsr L390D
+@
+    jsr sub_390d
     lda #$ff
     sta cur_adj1
     sta cur_adj2
     ldx #$00
-L39F7:
+@
     sta $2ca8,x
     inx
     cpx #$06
-    bne L39F7
+    bne @-
     lda word_match_buf
     cmp #$01
-    beq L3A67
+    beq @+2
     cmp #$02
-    bne L39E7
+    bne @-2
     lda $14fd
     sta cur_adj1
     ldx #$00
-L3A12:
+@
     lda $2ca8,x
     and $14fe,x
     sta $2ca8,x
     inx
     cpx #$06
-    bne L3A12
+    bne @-
     inc word_idx
     lda word_idx
     cmp token_count
-    bcs L39E7
-    jsr L390D
+    bcs @-3
+    jsr sub_390d
     lda word_match_buf
     cmp #$01
-    beq L3A67
+    beq @+1
     cmp #$02
-    bne L39E7
+    bne @-3
     lda $14fd
     sta cur_adj2
     ldx #$00
-L3A41:
+@
     lda $2ca8,x
     and $14fe,x
     sta $2ca8,x
     inx
     cpx #$06
-    bne L3A41
+    bne @-
     inc word_idx
     lda word_idx
     cmp token_count
-    bcs L39E7
-    jsr L390D
+    bcs @-4
+    jsr sub_390d
     lda word_match_buf
     cmp #$01
-    beq L3A67
-    jmp L39E7
-L3A67:
+    beq @+
+    jmp @-4
+@
     lda $14fd
     sta cur_noun
     lda $14fe
@@ -2633,37 +2633,37 @@ L3A67:
     sta $2cb8
     lda cur_noun
     sta $2c73
-    jsr L32B0
+    jsr sub_32b0
     ldx #$00
-L3A81:
+@
     cpx $2c77
-    bne L3A8F
+    bne @+
     lda $2cb8
     and $2ca8,x
     sta $2cb8
-L3A8F:
+@
     inx
     cpx #$06
-    bne L3A81
+    bne @-1
     inc word_idx
     lda #$00
     rts
 print_inflected_noun:
     lda cur_noun
     sta $2c73
-    jsr L32B0
+    jsr sub_32b0
     lda $2c77
     lda cur_adj1
     cmp #$ff
-    beq L3AC0
+    beq @+
     sta $2c73
-    jsr L31B4
+    jsr sub_31b4
     lda cur_adj2
     cmp #$ff
-    beq L3AC0
+    beq @+
     sta $2c73
-    jsr L31B4
-L3AC0:
+    jsr sub_31b4
+@
     lda cur_noun
     sta $2c73
     sta $2c8a
@@ -2680,25 +2680,25 @@ load_room_exits:
     ldy #$00
     pla
     tax
-L3AE0:
+@
     dex
-    beq L3AF5
+    beq @+1
     ldy #$00
-L3AE5:
+@
     lda (ZP_69),y
     INCPTR ZP_69
     cmp #$00
-    beq L3AE0
-    jmp L3AE5
-L3AF5:
+    beq @-1
+    jmp @-
+@
     lda (ZP_69),y
     iny
     CHROUT
     cmp #$00
-    bne L3AF5
+    bne @-
     lda #$0d
     CHROUT_JMP
-L3B04:
+sub_3b04:
     ldy #$00
     jsr read_bank_byte
     sta $1481
@@ -2708,38 +2708,38 @@ L3B04:
     iny
     jsr read_bank_byte
     cmp cur_noun
-    beq L3B1F
+    beq @+
     lda #$01
     rts
-L3B1F:
+@
     lda cur_adj1
     cmp #$ff
-    bne L3B29
-L3B26:
+    bne @+1
+@
     lda #$00
     rts
-L3B29:
+@
     cmp $1481
-    bne L3B3D
+    bne @+
     lda cur_adj2
     cmp #$ff
-    beq L3B26
+    beq @-1
     cmp $1482
-    beq L3B26
+    beq @-1
     lda #$01
     rts
-L3B3D:
+@
     cmp $1482
-    bne L3B4E
+    bne @+
     lda cur_adj2
     cmp #$ff
-    beq L3B26
+    beq @-2
     cmp $1481
-    beq L3B26
-L3B4E:
+    beq @-2
+@
     lda #$01
     rts
-L3B51:
+sub_3b51:
     sta $1483
     lda #$01
     sta temp_obj_idx
@@ -2751,253 +2751,253 @@ L3B5E:
     ldy #$00
     jsr read_bank_byte
     cmp #$fe
-    bne L3B6E
+    bne @+
     rts
-L3B6E:
-    jsr L3B04
+@
+    jsr sub_3b04
     cmp #$00
-    beq L3B78
-    jmp L3C92
-L3B78:
+    beq @+
+    jmp @+9
+@
     lda $1483
     and #$01
-    beq L3BA1
+    beq @+1
     ldy #$05
     jsr read_bank_byte
     and #$60
-    bne L3BA1
+    bne @+1
     ldy #$03
     jsr read_bank_byte
     cmp current_room
-    bne L3B95
-    jmp L3C89
-L3B95:
+    bne @+
+    jmp @+7
+@
     iny
     jsr read_bank_byte
     cmp current_room
-    bne L3BA1
-    jmp L3C89
-L3BA1:
+    bne @+
+    jmp @+6
+@
     lda $1483
     and #$02
-    beq L3BBE
+    beq @+
     ldy #$05
     jsr read_bank_byte
     and #$20
-    beq L3BBE
+    beq @+
     ldy #$03
     jsr read_bank_byte
     cmp cmd_verb_arg1
-    bne L3BBE
-    jmp L3C89
-L3BBE:
+    bne @+
+    jmp @+5
+@
     lda $1483
     and #$04
-    beq L3C07
+    beq @+1
     ldy #$05
     jsr read_bank_byte
     and #$20
-    beq L3C07
+    beq @+1
     ldy #$03
     jsr read_bank_byte
     cmp cmd_verb_arg1
-    beq L3C07
+    beq @+1
     cmp #$ff
-    beq L3C07
+    beq @+1
     jsr get_object_ptr
     ldy #$05
     jsr read_bank_byte
     and #$60
-    bne L3C07
+    bne @+1
     ldy #$03
     jsr read_bank_byte
     cmp current_room
-    beq L3BFB
+    beq @+
     iny
     jsr read_bank_byte
     cmp current_room
-    bne L3C07
-L3BFB:
+    bne @+1
+@
     ldy #$06
     jsr read_bank_byte
     and #$08
-    beq L3C07
-    jmp L3C89
-L3C07:
+    beq @+
+    jmp @+3
+@
     lda temp_obj_idx
     jsr get_object_ptr
     lda $1483
     and #$08
-    beq L3C58
+    beq @+1
     ldy #$05
     jsr read_bank_byte
     and #$40
-    beq L3C58
+    beq @+1
     ldy #$03
     jsr read_bank_byte
     cmp cmd_verb_arg1
-    beq L3C58
+    beq @+1
     cmp #$ff
-    beq L3C58
+    beq @+1
     jsr get_object_ptr
     ldy #$05
     jsr read_bank_byte
     and #$60
-    bne L3C58
+    bne @+1
     ldy #$03
     jsr read_bank_byte
     cmp current_room
-    beq L3C4A
+    beq @+
     iny
     jsr read_bank_byte
     cmp current_room
-    bne L3C58
-L3C4A:
+    bne @+1
+@
     ldy #$06
     jsr read_bank_byte
     and #$50
     cmp #$40
-    beq L3C58
-    jmp L3C89
-L3C58:
+    beq @+
+    jmp @+1
+@
     lda temp_obj_idx
     jsr get_object_ptr
     lda $1483
     and #$10
-    beq L3C92
+    beq @+1
     ldy #$05
     jsr read_bank_byte
     and #$60
-    beq L3C92
+    beq @+1
     ldy #$03
     jsr read_bank_byte
     cmp cmd_prep
-    bne L3C92
+    bne @+1
     lda cmd_prep
     jsr get_object_ptr
     ldy #$06
     jsr read_bank_byte
     and #$50
     cmp #$40
-    beq L3C92
-L3C89:
+    beq @+1
+@
     inc $1484
     lda temp_obj_idx
     sta $2d0b
-L3C92:
+@
     inc temp_obj_idx
     jmp L3B5E
-L3C98:
+sub_3c98:
     lda cmd_verb_id
     cmp #$00
-    bne L3CA2
+    bne @+
 L3C9F:
     lda #$ff
     rts
-L3CA2:
+@
     cmp #$01
     beq L3C9F
     cmp #$02
     beq L3C9F
     cmp #$03
-    bne L3CB9
+    bne @+
     lda #<syntax_rule_0
     sta ZP_69
     lda #>syntax_rule_0
     sta ZP_6A
     jmp L3D1A
-L3CB9:
+@
     cmp #$04
-    bne L3CC8
+    bne @+
     lda #<syntax_rule_1
     sta ZP_69
     lda #>syntax_rule_1
     sta ZP_6A
     jmp L3D1A
-L3CC8:
+@
     cmp #$05
-    bne L3CD7
+    bne @+
     lda #<syntax_rule_2
     sta ZP_69
     lda #>syntax_rule_2
     sta ZP_6A
     jmp L3D1A
-L3CD7:
+@
     cmp #$07
-    bne L3CE6
-L3CDB:
+    bne @+1
+@
     lda #<syntax_rule_3
     sta ZP_69
     lda #>syntax_rule_3
     sta ZP_6A
     jmp L3D1A
-L3CE6:
+@
     cmp #$08
-    beq L3CDB
+    beq @-1
     cmp #$09
-    beq L3CDB
+    beq @-1
     cmp #$06
-    bne L3CF5
-L3CF2:
+    bne @+1
+@
     lda #$ff
     rts
-L3CF5:
+@
     cmp #$0a
-    beq L3CF2
+    beq @-1
     cmp #$0b
-    beq L3D01
+    beq @+
     cmp #$0c
-    bne L3D0C
-L3D01:
+    bne @+1
+@
     lda #<syntax_rule_4
     sta ZP_69
     lda #>syntax_rule_4
     sta ZP_6A
     jmp L3D1A
-L3D0C:
+@
     cmp #$0d
-    bne L3D13
-L3D10:
+    bne @+1
+@
     lda #$ff
     rts
-L3D13:
+@
     cmp #$0e
-    beq L3D10
+    beq @-1
     lda #$ff
     rts
 L3D1A:
     ldx #$00
-L3D1C:
+@
     lda $2cc2,x
     cmp #$01
-    bne L3D2D
+    bne @+
     lda $2c90,x
     cmp #$02
-    bne L3D2D
-    jmp L3D36
-L3D2D:
+    bne @+
+    jmp @+1
+@
     inx
     cpx clause_idx
-    bne L3D1C
+    bne @-1
     jmp L3C9F
-L3D36:
+@
     ldy #$00
-L3D38:
+@
     lda (ZP_69),y
     cmp #$fe
-    beq L3D2D
+    beq @-2
     cmp $2c98,x
-    bne L3D4C
+    bne @+
     iny
     lda (ZP_69),y
     dey
     and $2cb0,x
-    bne L3D51
-L3D4C:
+    bne @+1
+@
     iny
     iny
-    jmp L3D38
-L3D51:
+    jmp @-1
+@
     lda $2c98,x
     sta $1485
     lda $2ca0,x
@@ -3016,12 +3016,12 @@ L3D51:
     sta $1488
     lda #$00
     rts
-L3D81:
+sub_3d81:
     lda cmd_verb_arg1
     cmp #$ff
-    bne L3D89
+    bne @+
     rts
-L3D89:
+@
     lda #$9f
     CHROUT
     lda #$00
@@ -3032,24 +3032,24 @@ L3D89:
     sta $2c8b
     lda #$06
     sta $2c73
-    jsr L3482
+    jsr sub_3482
     lda #$3a
     CHROUT
     lda #$0d
     CHROUT
     lda #$20
     CHROUT_JMP
-L3DB5:
+sub_3db5:
     sta $14a6
     ldx #$00
     stx clause_idx
-L3DBD:
+@
     lda clause_idx
     cmp cmd_obj_count
-    bcc L3DC8
+    bcc @+
     lda #$00
     rts
-L3DC8:
+@
     tax
     lda $148a,x
     sta cur_adj1
@@ -3058,122 +3058,122 @@ L3DC8:
     lda $149a,x
     sta cur_noun
     lda $14a6
-    jsr L3B51
+    jsr sub_3b51
     lda $1484
     cmp #$01
-    bne L3DF7
+    bne @+
     ldx clause_idx
     lda $2d0b
     sta cmd_obj_list,x
     inc clause_idx
-    jmp L3DBD
-L3DF7:
-    jsr L3F44
+    jmp @-1
+@
+    jsr sub_3f44
     lda #$ff
     rts
-L3DFD:
+sub_3dfd:
     lda #$9f
     CHROUT
     lda #$0d
     CHROUT
     lda cmd_verb_arg1
     cmp #$ff
-    beq L3E1C
+    beq @+
     lda #$00
     sta gram_case
     lda cmd_verb_arg1
     jsr print_object_name
     lda #$01
     dta $2c ; BIT abs trick to skip next 2-byte instruction
-L3E1C:
+@
     lda #$00
     sta $2c8b
     lda cmd_verb_id
     sta $2c73
-    jsr L3482
+    jsr sub_3482
     lda cmd_obj_count
-    bne L3E30
+    bne @+
     rts
-L3E30:
+@
     ldx clause_idx
     lda cmd_obj_list,x
     sta temp_obj_idx
     lda $14a3
     cmp #$ff
-    beq L3E4C
+    beq @+
     sta $2c73
     lda $14a4
     sta $2cb9
-    jsr L3418
-L3E4C:
+    jsr sub_3418
+@
     lda $14a2
-    jsr L3F2A
+    jsr sub_3f2a
     lda temp_obj_idx
-    jsr L3E7F
+    jsr sub_3e7f
 L3E58:
     lda cmd_prep
     cmp #$ff
-    bne L3E60
+    bne @+
     rts
-L3E60:
+@
     lda $1485
     cmp #$ff
-    beq L3E72
+    beq @+
     sta $2c73
     lda #$00
     sta $2cb9
-    jsr L3418
-L3E72:
+    jsr sub_3418
+@
     lda $1486
-    jsr L3F2A
+    jsr sub_3f2a
     lda cmd_prep
     jsr print_object_name
     rts
-L3E7F:
+sub_3e7f:
     cmp #$f0
-    bcs L3E86
+    bcs @+
     jmp print_object_name
-L3E86:
+@
     and #$0f
     sta temp_dir_idx
     jmp print_direction_name
-L3E8E:
+sub_3e8e:
     lda cur_adj2
     cmp #$ff
-    beq L3E98
+    beq @+
     lda #$ff
     rts
-L3E98:
+@
     ldx #$00
-L3E9A:
+@
     lda dir_adj_table,x
     cmp cur_adj1
-    bne L3EAC
+    bne @+
     lda dir_noun_table,x
     cmp cur_noun
-    bne L3EAC
+    bne @+
     txa
     rts
-L3EAC:
+@
     inx
     cpx #$0a
-    bcc L3E9A
+    bcc @-1
     lda #$ff
     rts
-L3EB4:
+sub_3eb4:
     lda #$0d
     CHROUT
-    jsr L3D81
+    jsr sub_3d81
     lda #$9f
     CHROUT
     lda cmd_verb_arg1
     cmp #$ff
-    beq L3ED2
+    beq @+
     ldx #<msg_1834
     ldy #>msg_1834
     jsr print_string
     jmp L3ED9
-L3ED2:
+@
     ldx #<msg_183f
     ldy #>msg_183f
     jsr print_string
@@ -3182,66 +3182,66 @@ L3ED9:
     sta $2c73
     lda #$02
     sta $2c8b
-    jsr L3482
+    jsr sub_3482
     lda cmd_obj_count
-    bne L3EED
+    bne @+
     rts
-L3EED:
+@
     ldx clause_idx
     lda cmd_obj_list,x
     sta temp_obj_idx
     lda $14a3
     cmp #$ff
-    beq L3F0C
+    beq @+
     sta $2c73
     lda $14a4
     sta $2cb9
-    jsr L3418
-    jmp L3F1B
-L3F0C:
+    jsr sub_3418
+    jmp @+1
+@
     lda $14a2
     and #$08
-    beq L3F1B
+    beq @+
     lda #$01
     sta gram_case
-    jmp L3F21
-L3F1B:
+    jmp @+1
+@
     lda $14a2
-    jsr L3F2A
-L3F21:
+    jsr sub_3f2a
+@
     lda temp_obj_idx
     jsr print_object_name
     jmp L3E58
-L3F2A:
+sub_3f2a:
     ldx #$00
     sta ZP_69
-L3F2E:
+@
     lda ZP_69
     and bit_mask_table,x
-    beq L3F39
+    beq @+
     stx gram_case
     rts
-L3F39:
+@
     inx
     cpx #$06
-    bne L3F2E
+    bne @-1
     lda #$00
     sta gram_case
     rts
-L3F44:
+sub_3f44:
     lda $1484
     cmp #$01
-    bne L3F4E
+    bne @+
     lda #$00
     rts
-L3F4E:
+@
     lda cur_noun
     pha
     lda cur_adj1
     pha
     lda cur_adj2
     pha
-    jsr L3D81
+    jsr sub_3d81
     pla
     sta cur_adj2
     pla
@@ -3249,7 +3249,7 @@ L3F4E:
     pla
     sta cur_noun
     lda $1484
-    beq L3F80
+    beq @+
     ldx #<msg_180e
     ldy #>msg_180e
     jsr print_string
@@ -3258,25 +3258,25 @@ L3F4E:
     jsr print_inflected_noun
     lda #$ff
     rts
-L3F80:
+@
     lda cmd_verb_arg1
     cmp #$ff
-    beq L3F91
+    beq @+
     ldx #<msg_1828
     ldy #>msg_1828
     jsr print_string
-    jmp L3F98
-L3F91:
+    jmp @+1
+@
     ldx #<msg_181a
     ldy #>msg_181a
     jsr print_string
-L3F98:
+@
     lda #$01
     sta gram_case
     jsr print_inflected_noun
     lda #$ff
     rts
-L3FA3:
+sub_3fa3:
     pha
     RAMON
     lda $c010
@@ -3286,9 +3286,9 @@ L3FA3:
     ROMON
     pla
     tax
-L3FC0:
+@
     dex
-    beq L3FD3
+    beq @+
     clc
     lda ZP_69
     adc #$0a
@@ -3296,85 +3296,85 @@ L3FC0:
     lda ZP_6A
     adc #$00
     sta ZP_6A
-    jmp L3FC0
-L3FD3:
+    jmp @-
+@
     rts
 get_random_byte:
     ldy #$0f
-L3FD6:
+@
     lda rng_seed_hi
     and #$a4
     sta ZP_69
     ldx #$08
     lda #$00
-L3FE1:
+@
     lsr ZP_69
     adc #$00
     dex
-    bne L3FE1
+    bne @-
     and #$01
     eor #$01
     lsr @
     rol rng_seed_lo
     rol rng_seed_hi
     dey
-    bne L3FD6
+    bne @-1
     lda rng_seed_lo
     rts
-L3FFA:
+sub_3ffa:
     lda $2d10
-    bpl L4000
+    bpl @+
     rts
-L4000:
+@
     lda current_room
     cmp #$03
-    bne L403F
+    bne @+1
     lda $2d10
     and #$01
-    bne L4035
+    bne @+
     inc $2d10
     lda #$0d
     CHROUT
     lda #$0b
     sta cmd_verb_arg1
-    jsr L3D81
+    jsr sub_3d81
     ldx #<msg_18b2
     ldy #>msg_18b2
     jsr print_string
     lda #$0a
     sta cmd_verb_arg1
-    jsr L3D81
+    jsr sub_3d81
     ldx #<msg_18d4
     ldy #>msg_18d4
     jsr print_string
     rts
-L4035:
+@
     ldx #<msg_18fe
     ldy #>msg_18fe
     jsr print_string
     jmp ask_play_again
-L403F:
+@
     cmp #$04
-    beq L4044
+    beq @+
     rts
-L4044:
+@
     lda $2d10
     and #$02
-    bne L405C
+    bne @+1
     lda $2d10
     and #$01
-    bne L4053
+    bne @+
     rts
-L4053:
+@
     lda #$02
     ora $2d10
     sta $2d10
     rts
-L405C:
+@
     lda #$0a
-    jsr L4094
+    jsr sub_4094
     lda #$0b
-    jsr L4094
+    jsr sub_4094
     ldx #<msg_1953
     ldy #>msg_1953
     jsr print_string
@@ -3391,7 +3391,7 @@ L405C:
     sta (ZP_69),y
     ROMON
     rts
-L4094:
+sub_4094:
     jsr get_object_ptr
     RAMON
     ldy #$00
@@ -3403,37 +3403,37 @@ L4094:
     sta (ZP_69),y
     ROMON
     rts
-L40B4:
+sub_40b4:
     jsr get_object_ptr
     ldy #$00
-L40B9:
+@
     jsr read_bank_byte
     cmp #$11
-    beq L40CC
+    beq @+
     cmp #$12
-    beq L40CC
+    beq @+
     iny
     cpy #$02
-    bne L40B9
+    bne @-
     lda #$00
     rts
-L40CC:
+@
     lda #$01
     rts
-L40CF:
+sub_40cf:
     lda #$05
-    jsr L40B4
+    jsr sub_40b4
     cmp #$00
-    beq L40D9
+    beq @+
     rts
-L40D9:
+@
     lda #$05
     jsr get_object_ptr
     ldy #$03
     jsr read_bank_byte
     sta $14a5
     cmp current_room
-    beq L4123
+    beq @+1
     inc $14a5
     lda $14a5
     and #$03
@@ -3446,67 +3446,67 @@ L40D9:
     ROMON
     lda $14a5
     cmp current_room
-    beq L4118
+    beq @+
     rts
-L4118:
+@
     lda #$05
-    jsr L4883
+    jsr sub_4883
     lda #$01
     sta $2d11
     rts
-L4123:
+@
     inc $2d11
     lda $2d11
     cmp #$04
-    bcs L4135
+    bcs @+
     ldx #<msg_1b54
     ldy #>msg_1b54
     jsr print_string
     rts
-L4135:
+@
     ldx #<msg_1b73
     ldy #>msg_1b73
     jsr print_string
     jmp ask_play_again
-L413F:
+sub_413f:
     lda #$31
-    jsr L40B4
+    jsr sub_40b4
     cmp #$00
-    beq L4149
+    beq @+
     rts
-L4149:
+@
     lda #$31
     jsr get_object_ptr
     ldy #$03
     jsr read_bank_byte
     sta $14a5
     cmp current_room
-    beq L415C
+    beq @+
     rts
-L415C:
+@
     inc $2d14
     lda $2d14
     cmp #$06
-    bcs L416E
+    bcs @+
     ldx #<msg_1b9b
     ldy #>msg_1b9b
     jsr print_string
     rts
-L416E:
+@
     ldx #<msg_1bb5
     ldy #>msg_1bb5
     jsr print_string
     jmp ask_play_again
-L4178:
+sub_4178:
     lda #$11
     jsr get_object_ptr
     ldy #$03
     jsr read_bank_byte
     cmp #$ff
     rts
-L4185:
-    jsr L4178
-    bne L41AB
+sub_4185:
+    jsr sub_4178
+    bne @+
     lda #$22
     jsr get_object_ptr
     RAMON
@@ -3518,7 +3518,7 @@ L4185:
     sta (ZP_69),y
     ROMON
     rts
-L41AB:
+@
     lda #$22
     jsr get_object_ptr
     RAMON
@@ -3529,20 +3529,20 @@ L41AB:
     sta (ZP_69),y
     ROMON
     rts
-L41CA:
+sub_41ca:
     lda #$33
     jsr get_object_ptr
     ldy #$03
     jsr read_bank_byte
     cmp #$ff
-    bne L41D9
+    bne @+
     rts
-L41D9:
+@
     lda current_room
     cmp #$34
-    beq L41E1
+    beq @+
     rts
-L41E1:
+@
     lda #$38
     sta current_room
     lda #$01
@@ -3550,38 +3550,38 @@ L41E1:
     ldy #$03
     jsr read_bank_byte
     cmp #$34
-    bne L420A
+    bne @+
     RAMON
     lda #$39
     ldy #$03
     sta (ZP_69),y
     ROMON
-L420A:
+@
     ldx #<msg_1d32
     ldy #>msg_1d32
     jsr print_string
     pla
     pla
     jmp room_loop
-L4216:
+sub_4216:
     lda current_room
     cmp #$3b
-    beq L421E
+    beq @+
     rts
-L421E:
+@
     jsr get_random_byte
     and #$01
-    beq L4226
+    beq @+
     rts
-L4226:
+@
     ldx #<msg_1ea6
     ldy #>msg_1ea6
     jsr print_string
     rts
-L422E:
+sub_422e:
     lda $2d1a
-    beq L4252
-L4233:
+    beq @+1
+@
     lda #$03
     jsr get_object_ptr
     RAMON
@@ -3592,30 +3592,30 @@ L4233:
     sta (ZP_69),y
     ROMON
     rts
-L4252:
+@
     lda #$03
     jsr get_object_ptr
     ldy #$03
     jsr read_bank_byte
     cmp #$06
-    bne L4233
+    bne @-1
     cmp current_room
-    beq L4266
-L4265:
+    beq @+1
+@
     rts
-L4266:
+@
     lda $2d1b
-    beq L4265
+    beq @-1
     lda #$15
     jsr get_object_ptr
     ldy #$03
     jsr read_bank_byte
     cmp #$03
-    bne L4265
+    bne @-1
     ldy #$05
     jsr read_bank_byte
     and #$60
-    beq L4265
+    beq @-1
     RAMON
     ldy #$03
     lda #$ff
@@ -3628,36 +3628,36 @@ L4266:
     ldy #>msg_1a5a
     jsr print_string
     rts
-L42A6:
+sub_42a6:
     lda $2d1a
-    beq L42AC
+    beq @+
     rts
-L42AC:
+@
     lda #$33
     jsr get_object_ptr
     ldy #$03
     jsr read_bank_byte
     cmp #$ff
-    bne L42BD
+    bne @+
     inc $2d1a
-L42BD:
+@
     rts
-L42BE:
+sub_42be:
     lda $2d12
-    beq L42C6
-    jmp L4326
-L42C6:
+    beq @+
+    jmp @+6
+@
     lda current_room
     cmp #$27
-    bne L42FA
+    bne @+1
     lda #$34
     jsr get_object_ptr
     ldy #$03
     jsr read_bank_byte
     cmp #$04
-    beq L42DC
+    beq @+
     rts
-L42DC:
+@
     RAMON
     ldy #$03
     lda #$ff
@@ -3667,117 +3667,117 @@ L42DC:
     ldy #>msg_2121
     jsr print_string
     rts
-L42FA:
+@
     jsr get_random_byte
     and #$03
-    beq L4302
+    beq @+
     rts
-L4302:
+@
     lda current_room
     cmp #$26
-    beq L430A
+    beq @+
     rts
-L430A:
+@
     lda #$21
     jsr get_object_ptr
     ldy #$06
     jsr read_bank_byte
     and #$10
-    beq L4319
+    beq @+
     rts
-L4319:
+@
     lda #$0d
     CHROUT
     lda #$04
     ldx #$21
-    jsr L47B1
+    jsr sub_47b1
     rts
-L4326:
+@
     lda current_room
     cmp #$27
-    beq L432E
+    beq @+
     rts
-L432E:
+@
     ldx #<msg_1f9a
     ldy #>msg_1f9a
     jsr print_string
     jmp ask_play_again
-L4338:
+sub_4338:
     lda #$02
     jsr get_object_ptr
     ldy #$03
     jsr read_bank_byte
     sta $14a5
     cmp current_room
-    beq L434B
+    beq @+
     rts
-L434B:
+@
     lda #$33
     jsr get_object_ptr
     ldy #$05
     jsr read_bank_byte
     and #$60
-    beq L4365
+    beq @+
     ldy #$03
     jsr read_bank_byte
     cmp #$02
-    bne L4365
+    bne @+
     jmp L599D
-L4365:
+@
     jsr get_random_byte
     and #$03
-    beq L436D
+    beq @+
     rts
-L436D:
+@
     ldx #<msg_205e
     ldy #>msg_205e
     jsr print_string
     rts
-L4375:
+sub_4375:
     lda #$01
     jsr get_object_ptr
     ldy #$03
     jsr read_bank_byte
     sta $14a5
     lda turn_wait_cnt
-    bne L43FF
+    bne @+3
     lda $14a5
     cmp current_room
-    beq L43FF
+    beq @+3
     lda current_room
     cmp #$13
-    beq L43DB
+    beq @+2
     lda $14a5
-    jsr L3FA3
+    jsr sub_3fa3
     ldy #$00
-L439E:
+@
     jsr read_bank_byte
     cmp current_room
-    beq L43AE
+    beq @+
     iny
     cpy #$0a
-    bne L439E
-    jmp L43FF
-L43AE:
+    bne @-
+    jmp @+2
+@
     sty temp_dir_idx
-    jsr L4829
+    jsr sub_4829
     cmp #$ff
-    beq L43DB
+    beq @+
     sta temp_obj_idx
     jsr get_object_ptr
     ldy #$06
     jsr read_bank_byte
     and #$20
-    beq L43FF
+    beq @+1
     jsr read_bank_byte
     and #$50
     cmp #$40
-    bne L43DB
+    bne @+
     lda #$01
     ldx temp_obj_idx
-    jsr L47B1
-    jmp L43FF
-L43DB:
+    jsr sub_47b1
+    jmp @+1
+@
     lda #$01
     jsr get_object_ptr
     RAMON
@@ -3787,25 +3787,25 @@ L43DB:
     sta $14a5
     ROMON
     lda #$01
-    jsr L4883
-L43FF:
+    jsr sub_4883
+@
     lda turn_wait_cnt
-    beq L4407
+    beq @+
     dec turn_wait_cnt
-L4407:
+@
     lda #$14
     jsr get_object_ptr
     ldy #$05
     jsr read_bank_byte
     and #$20
-    beq L4448
+    beq @+
     ldy #$03
     jsr read_bank_byte
     cmp #$ff
-    bne L4448
+    bne @+
     lda $14a5
     cmp current_room
-    bne L4448
+    bne @+
     ldx #<msg_1eeb
     ldy #>msg_1eeb
     jsr print_string
@@ -3816,17 +3816,17 @@ L4407:
     lda #$01
     sta (ZP_69),y
     ROMON
-L4448:
+@
     lda #$14
     jsr get_object_ptr
     ldy #$05
     jsr read_bank_byte
     and #$60
-    bne L448B
+    bne @+
     ldy #$03
     jsr read_bank_byte
     cmp $14a5
-    bne L448B
+    bne @+
     RAMON
     lda #$20
     ldy #$05
@@ -3837,22 +3837,22 @@ L4448:
     ROMON
     lda current_room
     cmp $14a5
-    bne L448B
+    bne @+
     ldx #<msg_1eeb
     ldy #>msg_1eeb
     jsr print_string
-L448B:
+@
     lda current_room
     cmp $14a5
-    bne L44C8
+    bne @+
     lda #$33
     jsr get_object_ptr
     ldy #$03
     jsr read_bank_byte
     cmp #$ff
-    bne L44C8
+    bne @+
     lda turn_wait_cnt
-    bne L44C8
+    bne @+
     ldx #<msg_22d9
     ldy #>msg_22d9
     jsr print_string
@@ -3863,20 +3863,20 @@ L448B:
     lda #$00
     sta (ZP_69),y
     ROMON
-L44C8:
+@
     rts
-L44C9:
+sub_44c9:
     lda #$11
     jsr get_object_ptr
     ldy #$03
     jsr read_bank_byte
     cmp #$ff
-    bne L44D8
+    bne @+
     rts
-L44D8:
+@
     lda current_room
     cmp #$12
-    bne L44FA
+    bne @+
     ldx #<msg_1966
     ldy #>msg_1966
     jsr print_string
@@ -3889,34 +3889,34 @@ L44D8:
     pla
     pla
     jmp room_loop
-L44FA:
+@
     lda #$06
     sta $14a7
-L44FF:
+@
     lda $14a7
     jsr get_object_ptr
     ldy #$03
     jsr read_bank_byte
     sta $14a5
     jsr get_random_byte
-    jmp L4519
-L4513:
+    jmp @+1
+@
     inc temp_dir_idx
     lda temp_dir_idx
-L4519:
+@
     and #$07
     sta temp_dir_idx
     lda $14a5
-    jsr L3FA3
+    jsr sub_3fa3
     ldy temp_dir_idx
     jsr read_bank_byte
     cmp #$14
-    bcc L4513
+    bcc @-1
     cmp #$20
-    bcs L4513
+    bcs @-1
     lda $14a5
     cmp current_room
-    bne L455E
+    bne @+
     lda #$0d
     CHROUT
     lda #$9f
@@ -3931,9 +3931,9 @@ L4519:
     lda #$03
     sta gram_case
     jsr print_direction_name
-L455E:
+@
     lda $14a5
-    jsr L3FA3
+    jsr sub_3fa3
     ldy temp_dir_idx
     jsr read_bank_byte
     sta $14a5
@@ -3946,22 +3946,22 @@ L455E:
     ROMON
     lda $14a5
     cmp current_room
-    bne L4598
+    bne @+
     lda $14a7
-    jsr L4883
-L4598:
+    jsr sub_4883
+@
     inc $14a7
     lda $14a7
     cmp #$0a
-    bne L45A3
+    bne @+
     rts
-L45A3:
-    jmp L44FF
-L45A6:
+@
+    jmp @-5
+sub_45a6:
     lda $2d19
-    bne L45AC
+    bne @+
     rts
-L45AC:
+@
     lda #$0d
     jsr get_object_ptr
     ldy #$03
@@ -3972,9 +3972,9 @@ L45AC:
     ldy #$03
     jsr read_bank_byte
     cmp $14a5
-    beq L45C9
+    beq @+
     rts
-L45C9:
+@
     RAMON
     ldy #$03
     lda #$00
@@ -3982,46 +3982,46 @@ L45C9:
     ROMON
     lda $14a5
     cmp current_room
-    bne L45EF
+    bne @+
     ldx #<msg_223d
     ldy #>msg_223d
     jsr print_string
     rts
-L45EF:
+@
     ldx #<msg_225e
     ldy #>msg_225e
     jsr print_string
     rts
-L45F7:
+sub_45f7:
     lda #$0d
     jsr get_object_ptr
     ldy #$03
     jsr read_bank_byte
     sta $14a5
     cmp current_room
-    bne L460C
-    jmp L4695
-L460C:
+    bne @+
+    jmp @+6
+@
     jsr get_random_byte
-    jmp L4618
-L4612:
+    jmp @+1
+@
     inc temp_dir_idx
     lda temp_dir_idx
-L4618:
+@
     and #$07
     sta temp_dir_idx
     lda $14a5
-    jsr L3FA3
+    jsr sub_3fa3
     ldy temp_dir_idx
     jsr read_bank_byte
     cmp #$3d
-    bcc L4612
+    bcc @-1
     cmp #$49
-    bcs L4612
-L4631:
+    bcs @-1
+@
     lda $14a5
     cmp current_room
-    bne L465C
+    bne @+
     lda #$0d
     CHROUT
     lda #$9f
@@ -4036,9 +4036,9 @@ L4631:
     lda #$03
     sta gram_case
     jsr print_direction_name
-L465C:
+@
     lda $14a5
-    jsr L3FA3
+    jsr sub_3fa3
     ldy temp_dir_idx
     jsr read_bank_byte
     sta $14a5
@@ -4051,17 +4051,17 @@ L465C:
     ROMON
     lda $14a5
     cmp current_room
-    bne L4694
+    bne @+
     lda #$0d
-    jsr L4883
-L4694:
+    jsr sub_4883
+@
     rts
-L4695:
+@
     ldx $14a5
     lda $2d04,x
     sta temp_dir_idx
     lda $2d13
-    bne L46CD
+    bne @+
     ldx #<msg_2025
     ldy #>msg_2025
     jsr print_string
@@ -4076,23 +4076,23 @@ L4695:
     lda #$4c
     sta (ZP_69),y
     ROMON
-L46CD:
+@
     lda temp_dir_idx
-    bmi L46D5
-    jmp L4631
-L46D5:
+    bmi @+
+    jmp @-4
+@
     rts
-L46D6:
+sub_46d6:
     lda #$0f
     jsr get_object_ptr
     ldy #$03
     jsr read_bank_byte
     sta $14a5
-    jmp L474A
+    jmp @+2
 L46E6:
     lda $14a5
     cmp current_room
-    bne L4711
+    bne @+
     lda #$0d
     CHROUT
     lda #$9f
@@ -4107,9 +4107,9 @@ L46E6:
     lda #$03
     sta gram_case
     jsr print_direction_name
-L4711:
+@
     lda $14a5
-    jsr L3FA3
+    jsr sub_3fa3
     ldy temp_dir_idx
     jsr read_bank_byte
     sta $14a5
@@ -4122,67 +4122,67 @@ L4711:
     ROMON
     lda $14a5
     cmp current_room
-    bne L4749
+    bne @+
     lda #$0f
-    jsr L4883
-L4749:
+    jsr sub_4883
+@
     rts
-L474A:
-    jsr L4178
-    bne L476B
+@
+    jsr sub_4178
+    bne @+
     lda $2d16
-    bne L4786
+    bne @+3
     lda current_room
     cmp $14a5
-    bne L476B
+    bne @+
     lda #$01
     sta $2d16
     ldx #<msg_1c98
     ldy #>msg_1c98
     jsr print_string
-    jmp L4786
-L476B:
+    jmp @+3
+@
     lda $2d16
-    bne L4786
+    bne @+2
     ldx $14a5
     cpx #$20
-    bcs L4778
+    bcs @+
     rts
-L4778:
+@
     cpx #$25
-    bcc L477D
+    bcc @+
     rts
-L477D:
+@
     lda $2d2d,x
     sta temp_dir_idx
     jmp L46E6
-L4786:
+@
     lda $14a5
     cmp current_room
-    beq L478F
+    beq @+
     rts
-L478F:
+@
     lda #<npc_move_table
     sta ZP_69
     lda #>npc_move_table
     sta ZP_6A
     ldy #$00
-L4799:
+@
     lda (ZP_69),y
-    bne L479E
+    bne @+
     rts
-L479E:
+@
     cmp $14a5
-    bne L47AC
+    bne @+
     iny
     lda (ZP_69),y
     sta temp_dir_idx
     jmp L46E6
-L47AC:
+@
     iny
     iny
-    jmp L4799
-L47B1:
+    jmp @-2
+sub_47b1:
     stx cmd_obj_list
     sta cmd_verb_arg1
     lda cmd_obj_list
@@ -4190,9 +4190,9 @@ L47B1:
     ldy #$07
     jsr read_bank_byte
     cmp #$ff
-    beq L47C7
+    beq @+
     rts
-L47C7:
+@
     RAMON
     ldy #$06
     lda (ZP_69),y
@@ -4201,83 +4201,83 @@ L47C7:
     ROMON
     lda $14a5
     cmp current_room
-    beq L4805
+    beq @+1
     ldy #$03
     jsr read_bank_byte
     cmp current_room
-    beq L47FB
+    beq @+
     iny
     jsr read_bank_byte
     cmp current_room
-    beq L47FB
+    beq @+
     rts
-L47FB:
+@
     ldx #<msg_1a02
     ldy #>msg_1a02
     jsr print_string
-    jmp L4810
-L4805:
+    jmp @+1
+@
     lda #$00
     sta gram_case
     lda cmd_verb_arg1
     jsr print_object_name
-L4810:
+@
     lda #$01
     sta $2c8b
     lda #$07
     sta $2c73
-    jsr L3482
+    jsr sub_3482
     lda #$03
     sta gram_case
     lda cmd_obj_list
     jsr print_object_name
     rts
-L4829:
+sub_4829:
     lda #$01
     sta temp_obj_idx
-L482E:
+@
     lda temp_obj_idx
     jsr get_object_ptr
     ldy #$00
     jsr read_bank_byte
     cmp #$fe
-    beq L4880
+    beq @+4
     ldy #$05
     jsr read_bank_byte
     and #$60
-    bne L487A
+    bne @+3
     ldy #$03
     jsr read_bank_byte
     cmp $14a5
-    beq L486C
+    beq @+1
     iny
     jsr read_bank_byte
     cmp $14a5
-    bne L487A
+    bne @+3
     ldy #$05
     jsr read_bank_byte
     cmp #$08
-    bcs L4867
+    bcs @+
     eor #$04
-    jmp L4871
-L4867:
+    jmp @+2
+@
     eor #$01
-    jmp L4871
-L486C:
+    jmp @+1
+@
     ldy #$05
     jsr read_bank_byte
-L4871:
+@
     cmp temp_dir_idx
-    bne L487A
+    bne @+
     lda temp_obj_idx
     rts
-L487A:
+@
     inc temp_obj_idx
-    jmp L482E
-L4880:
+    jmp @-4
+@
     lda #$ff
     rts
-L4883:
+sub_4883:
     pha
     ldx #<msg_1895
     ldy #>msg_1895
@@ -4286,9 +4286,9 @@ L4883:
     sta gram_case
     pla
     jmp print_object_name
-L4894:
+sub_4894:
     pha
-    jsr L3D81
+    jsr sub_3d81
     ldx #<msg_1a12
     ldy #>msg_1a12
     jsr print_string
@@ -4296,31 +4296,31 @@ L4894:
     sta gram_case
     pla
     jmp print_object_name
-L48A8:
+sub_48a8:
     cmp #$12
-    bne L48C3
+    bne @+
     ldy cmd_verb_arg1
     cpy #$03
-    bne L48C3
-    jsr L3D81
+    bne @+
+    jsr sub_3d81
     ldx #<msg_1a35
     ldy #>msg_1a35
     jsr print_string
     lda #$01
     sta $2d1b
     rts
-L48C3:
+@
     rts
-L48C4:
+sub_48c4:
     sta temp_obj_idx
     jsr get_object_ptr
     RAMON
     ldy #$00
     lda (ZP_69),y
     cmp #$ff
-    beq L48DD
+    beq @+
     iny
-L48DD:
+@
     lda #$11
     sta (ZP_69),y
     ldy #$06
@@ -4328,46 +4328,46 @@ L48DD:
     sta (ZP_69),y
     ROMON
     rts
-L48EE:
+sub_48ee:
     lda #<weapon_pair_table
     sta ZP_69
     lda #>weapon_pair_table
     sta ZP_6A
-L48F6:
+@
     ldy #$00
     lda (ZP_69),y
     ldx clause_idx
     cmp cmd_obj_list,x
-    bne L490D
+    bne @+
     iny
     lda (ZP_69),y
     cmp cmd_verb_arg1
-    bne L490D
+    bne @+
     lda #$00
     rts
-L490D:
+@
     INCPTR ZP_69
     INCPTR ZP_69
     ldy #$00
     lda (ZP_69),y
     cmp #$ff
-    bne L48F6
+    bne @-1
     rts
-L4924:
+sub_4924:
     ldx #$00
-L4926:
+@
     lda dark_rooms_table,x
-    beq L493D
+    beq @+1
     cmp current_room
-    bne L493A
+    bne @+
     ldx #<msg_19bb
     ldy #>msg_19bb
     jsr print_string
     jmp ask_play_again
-L493A:
+@
     inx
-    bne L4926
-L493D:
+    bne @-1
+@
     rts
 show_title_and_intro:
     ldx #<str_kbd_top
@@ -4388,78 +4388,78 @@ show_title_and_intro:
     ldx #<str_title_logo
     ldy #>str_title_logo
     jsr print_string
-L4968:
+@
     GETIN
-    beq L4968
+    beq @-
     lda #<str_intro_story
     sta ZP_69
     lda #>str_intro_story
     sta ZP_6A
-L4975:
+@
     ldy #$00
     lda (ZP_69),y
-    beq L4998
+    beq @+2
     CHROUT
     ldx #$20
     ldy #$00
-L4982:
+@
     dey
-    bne L4982
+    bne @-
     dex
-    bne L4982
+    bne @-
     GETIN
-    bne L4997
+    bne @+
     INCPTR ZP_69
-    jmp L4975
-L4997:
+    jmp @-1
+@
     rts
-L4998:
+@
     GETIN
-    beq L4998
+    beq @-
     rts
-L499E:
+sub_499e:
     lda #$0e
     jsr get_object_ptr
     ldy #$03
     jsr read_bank_byte
     sta $14a5
     cmp #$00
-    bne L49B0
+    bne @+
     rts
-L49B0:
+@
     cmp #$52
-    bne L49D0
+    bne @+
     lda #$33
     jsr get_object_ptr
     ldy #$03
     jsr read_bank_byte
     cmp #$32
-    bne L49D0
+    bne @+
     ldy #$05
     jsr read_bank_byte
     and #$60
-    bne L49D0
+    bne @+
     lda #$01
     sta $2d15
-L49D0:
+@
     lda $14a5
     cmp current_room
-    bne L49E7
+    bne @+1
     lda $2d15
-    beq L49E7
-L49DD:
+    beq @+1
+@
     ldx #<msg_208b
     ldy #>msg_208b
     jsr print_string
     jmp ask_play_again
-L49E7:
+@
     lda $14a5
     cmp current_room
-    bne L49F6
+    bne @+
     ldx #<msg_20f2
     ldy #>msg_20f2
     jsr print_string
-L49F6:
+@
     ldx $14a5
     lda $2ce6,x
     sta $14a5
@@ -4472,16 +4472,16 @@ L49F6:
     ROMON
     lda $14a5
     cmp current_room
-    bne L4A2F
+    bne @+
     ldx #<msg_20d9
     ldy #>msg_20d9
     jsr print_string
     lda $2d15
-    bne L49DD
-L4A2F:
+    bne @-2
+@
     rts
-L4A30:
-    jsr L3D81
+sub_4a30:
+    jsr sub_3d81
     ldx #<msg_1ee0
     ldy #>msg_1ee0
     jsr print_string
@@ -4489,25 +4489,25 @@ L4A30:
 delay_short:
     lda #$0a
     sta ZP_69
-L4A41:
+@
     ldx #$00
     ldy #$00
-L4A45:
+@
     dey
-    bne L4A45
+    bne @-
     dex
-    bne L4A45
+    bne @-
     dec ZP_69
-    bne L4A41
+    bne @-1
     rts
 write_save_data:
     ldy #$00
-L4A52:
+@
     lda turn_wait_cnt,y
     CHROUT
     iny
     cpy #$0d
-    bne L4A52
+    bne @-
     lda current_room
     CHROUT
     RAMON
@@ -4516,18 +4516,18 @@ L4A52:
     lda $0d07
     sta ZP_6A
     ROMON
-L4A7D:
+@
     ldy #$00
     jsr read_bank_byte
     cmp #$fe
-    bne L4A89
+    bne @+
     CHROUT_JMP
-L4A89:
+@
     jsr read_bank_byte
     CHROUT
     iny
     cpy #$08
-    bne L4A89
+    bne @-
     clc
     lda ZP_69
     adc #$08
@@ -4535,15 +4535,15 @@ L4A89:
     lda ZP_6A
     adc #$00
     sta ZP_6A
-    jmp L4A7D
+    jmp @-1
 read_save_data:
     ldy #$00
-L4AA6:
+@
     CHRIN
     sta turn_wait_cnt,y
     iny
     cpy #$0d
-    bne L4AA6
+    bne @-
     CHRIN
     sta current_room
     RAMON
@@ -4552,7 +4552,7 @@ L4AA6:
     lda $0d07
     sta ZP_6A
     ROMON
-L4AD1:
+@
     CHRIN
     ldy #$00
     pha
@@ -4563,20 +4563,20 @@ L4AD1:
     ROMON
     pla
     cmp #$fe
-    bne L4AF1
+    bne @+
     rts
-L4AF1:
+@
     iny
     cpy #$08
-    beq L4B10
+    beq @+
     CHRIN
     pha
     RAMON
     pla
     sta (ZP_69),y
     ROMON
-    jmp L4AF1
-L4B10:
+    jmp @-
+@
     clc
     lda ZP_69
     adc #$08
@@ -4584,7 +4584,7 @@ L4B10:
     lda ZP_6A
     adc #$00
     sta ZP_6A
-    jmp L4AD1
+    jmp @-2
 str_ask_restore:
     dta CR, C_YEL, c'CZY ODTWARZASZ NAGRAN', PL_A, c' GR', PL_E
     dta c'? (T/N)', CR, $00
@@ -4598,16 +4598,16 @@ ask_tape_or_disk:
     ldx #<str_ask_tape_disk
     ldy #>str_ask_tape_disk
     jsr print_string
-L4B6A:
+@
     GETIN
     cmp #$54
-    beq L4B7B
+    beq @+
     cmp #$44
-    bne L4B6A
+    bne @-
     lda #$08
     sta io_dev_num
     rts
-L4B7B:
+@
     lda #$01
     sta io_dev_num
     rts
@@ -4621,14 +4621,14 @@ save_game:
     ldy #>str_dos_Hobbidata
     lda io_dev_num
     cmp #$08
-    beq L4BA2
+    beq @+
     ldx #<str_hobbidata
     ldy #>str_hobbidata
     lda #$09
-    jmp L4BA4
-L4BA2:
+    jmp @+1
+@
     lda #$0b
-L4BA4:
+@
     SETNAM
     OPEN_CH
     ldx #$01
@@ -4654,26 +4654,26 @@ load_game:
     CLRCHN
     lda #$01
     CLOSE_CH_JMP
-L4BE3:
+sub_4be3:
     lda #$01
     sta temp_obj_idx
     lda #$00
     sta ZP_6B
     lda #$01
     sta ZP_6C
-L4BF0:
+@
     lda temp_obj_idx
     jsr get_object_ptr
     ldy #$00
     jsr read_bank_byte
     cmp #$fe
-    bne L4C00
+    bne @+
     rts
-L4C00:
+@
     ldy #$03
     jsr read_bank_byte
     cmp #$ff
-    bne L4C1A
+    bne @+
     ldy temp_obj_idx
     lda obj_weight_table,y
     clc
@@ -4682,19 +4682,19 @@ L4C00:
     lda ZP_6A
     adc #$00
     sta ZP_6A
-L4C1A:
+@
     inc temp_obj_idx
-    jmp L4BF0
+    jmp @-2
 update_hunger_and_carry:
     lda hunger_lo
     ora hunger_hi
-    bne L4C32
+    bne @+
     ldx #<str_starved
     ldy #>str_starved
     jsr print_string
     jmp ask_play_again
-L4C32:
-    jsr L4BE3
+@
+    jsr sub_4be3
     lda hunger_lo
     sec
     sbc ZP_6B
@@ -4702,19 +4702,19 @@ L4C32:
     lda hunger_hi
     sbc ZP_6C
     sta hunger_hi
-    bcs L4C50
+    bcs @+
     lda #$00
     sta hunger_lo
     sta hunger_hi
-L4C50:
+@
     lda hunger_hi
-    bpl L4C56
+    bpl @+
     rts
-L4C56:
+@
     and #$03
-    beq L4C5B
+    beq @+
     rts
-L4C5B:
+@
     lda hunger_hi
     and #$7f
     lsr @
@@ -4735,12 +4735,12 @@ main_entry:
     ldx #<str_ask_restore
     ldy #>str_ask_restore
     jsr print_string
-L4C93:
+@
     GETIN
     cmp #$4e
     beq init_new_game
     cmp #$54
-    bne L4C93
+    bne @-
     jsr load_game
     ldx #<str_ok
     ldy #>str_ok
@@ -4756,17 +4756,17 @@ init_new_game:
     sta ZP_6B
     lda $0d07
     sta ZP_6C
-L4CC9:
+@
     ldy #$00
     lda (ZP_69),y
     cmp #$fe
-    beq L4CF7
-L4CD1:
+    beq @+1
+@
     lda (ZP_69),y
     sta (ZP_6B),y
     iny
     cpy #$08
-    bne L4CD1
+    bne @-
     clc
     lda ZP_69
     adc #$08
@@ -4781,8 +4781,8 @@ L4CD1:
     lda ZP_6C
     adc #$00
     sta ZP_6C
-    jmp L4CC9
-L4CF7:
+    jmp @-1
+@
     lda #$fe
     sta (ZP_6B),y
     ROMON
@@ -4812,31 +4812,31 @@ room_loop:
     jsr describe_room
     jsr list_room_objects
 L4D44:
-    jsr L45A6
-    jsr L4924
-    jsr L40CF
-    jsr L4375
-    jsr L3FFA
-    jsr L44C9
-    jsr L4185
-    jsr L41CA
-    jsr L4216
-    jsr L42BE
-    jsr L45F7
-    jsr L45A6
-    jsr L413F
-    jsr L46D6
-    jsr L4338
-    jsr L499E
-    jsr L45A6
-    jsr L422E
+    jsr sub_45a6
+    jsr sub_4924
+    jsr sub_40cf
+    jsr sub_4375
+    jsr sub_3ffa
+    jsr sub_44c9
+    jsr sub_4185
+    jsr sub_41ca
+    jsr sub_4216
+    jsr sub_42be
+    jsr sub_45f7
+    jsr sub_45a6
+    jsr sub_413f
+    jsr sub_46d6
+    jsr sub_4338
+    jsr sub_499e
+    jsr sub_45a6
+    jsr sub_422e
     jsr update_hunger_and_carry
-    jsr L42A6
+    jsr sub_42a6
 command_loop:
     jsr read_and_tokenize
     lda #$00
     sta word_idx
-L4D88:
+@
     jsr lookup_word
     jsr check_word_valid
     cmp #$ff
@@ -4847,24 +4847,24 @@ L4D88:
     asl @
     tax
     ldy #$00
-L4D9B:
+@
     lda word_match_buf,y
     sta parsed_words_buf,x
     inx
     iny
     cpy #$08
-    bne L4D9B
+    bne @-
     inc word_idx
     lda word_idx
     cmp token_count
-    bcc L4D88
+    bcc @-1
     lda #$00
     sta word_idx
     sta $2cca
     sta clause_idx
-L4DBD:
+@
     jsr parse_clause
-    bpl L4DDE
+    bpl @+2
 print_random_cant_do:
     jsr get_random_byte
     and #$03
@@ -4874,54 +4874,54 @@ print_random_cant_do:
     tax
     lda $178a,y
     tay
-L4DD1:
+@
     jsr print_string
     jmp command_loop
-L4DD7:
+@
     ldx #<str_sentence_too_complex
     ldy #>str_sentence_too_complex
-    jmp L4DD1
-L4DDE:
+    jmp @-1
+@
     ldx clause_idx
     lda $2cb8
     sta $2caf,x
     lda word_idx
     cmp token_count
-    bcc L4DF2
-    jmp L4DFF
-L4DF2:
+    bcc @+
+    jmp @+2
+@
     lda clause_idx
     cmp #$05
-    bcc L4DFC
-    jmp L4DD7
-L4DFC:
-    jmp L4DBD
-L4DFF:
+    bcc @+
+    jmp @-2
+@
+    jmp @-5
+@
     lda #$ff
     sta cmd_verb_arg1
     lda $2c90
     cmp #$01
-    beq L4E0E
-    jmp L4ED6
-L4E0E:
+    beq @+
+    jmp @+9
+@
     lda $2c98
     cmp #$06
-    beq L4E18
-    jmp L4ED6
-L4E18:
+    beq @+
+    jmp @+8
+@
     lda #$00
     sta $2c90
     lda $2c91
     cmp #$02
-    beq L4E27
-L4E24:
+    beq @+1
+@
     jmp print_random_cant_do
-L4E27:
+@
     lda #$00
     sta $2c91
     lda $2cc3
     cmp #$01
-    bne L4E24
+    bne @-1
     lda $2cbb
     tax
     lda $2ccb,x
@@ -4932,39 +4932,39 @@ L4E27:
     sta cur_noun
     lda $2c99
     cmp #$ff
-    bne L4E5A
+    bne @+
     lda $2cb1
     and #$04
-    beq L4E24
-    jmp L4E65
-L4E5A:
+    beq @-1
+    jmp @+1
+@
     cmp #$04
-    bne L4E24
+    bne @-2
     lda $2cb0
     and #$02
-    beq L4E24
-L4E65:
+    beq @-2
+@
     lda #$01
-    jsr L3B51
+    jsr sub_3b51
     lda $1484
     cmp #$02
-    bcc L4E83
+    bcc @+1
     ldx #<msg_180e
     ldy #>msg_180e
     jsr print_string
-L4E78:
+@
     lda #$03
     sta gram_case
     jsr print_inflected_noun
     jmp command_loop
-L4E83:
+@
     cmp #$00
-    bne L4E91
+    bne @+
     ldx #<msg_181a
     ldy #>msg_181a
     jsr print_string
-    jmp L4E78
-L4E91:
+    jmp @-1
+@
     lda $2d0b
     sta cmd_verb_arg1
     sta temp_obj_idx
@@ -4974,12 +4974,12 @@ L4E91:
     sta $2c8b
     lda #$06
     sta $2c73
-    jsr L3482
+    jsr sub_3482
     lda #$00
     sta $2cb9
     lda #$04
     sta $2c73
-    jsr L3418
+    jsr sub_3418
     lda temp_obj_idx
     jsr print_object_name
     lda #$0d
@@ -4989,27 +4989,27 @@ L4E91:
     ldy #$06
     jsr read_bank_byte
     and #$08
-    bne L4ED6
+    bne @+
     jmp after_turn_jump
-L4ED6:
+@
     ldy #$00
     sty ZP_69
-L4EDA:
+@
     lda $2c90,y
     cmp #$01
-    bne L4EE5
+    bne @+
     inc ZP_69
     sty ZP_6A
-L4EE5:
+@
     iny
     cpy clause_idx
-    bcc L4EDA
+    bcc @-1
     lda ZP_69
     cmp #$01
-    beq L4EF7
-    jsr L3D81
+    beq @+
+    jsr sub_3d81
     jmp print_random_cant_do
-L4EF7:
+@
     ldy ZP_6A
     lda #$00
     sta $2c90,y
@@ -5017,30 +5017,30 @@ L4EF7:
     sta cmd_verb_id
     ldy #$00
     sty ZP_69
-L4F08:
+@
     lda $2c90,y
     cmp #$02
-    bne L4F17
+    bne @+
     ldx ZP_69
     tya
     sta parsed_words_buf,x
     inc ZP_69
-L4F17:
+@
     iny
     cpy clause_idx
-    bne L4F08
+    bne @-1
     lda ZP_69
     sta $1480
     cmp #$03
-    bcc L4F2C
-    jsr L3D81
+    bcc @+
+    jsr sub_3d81
     jmp print_random_cant_do
-L4F2C:
+@
     lda cmd_verb_arg1
     cmp #$0f
-    bne L4F49
+    bne @+
     lda $2d16
-    beq L4F49
+    beq @+
     ldx #<msg_1c24
     ldy #>msg_1c24
     jsr print_string
@@ -5048,20 +5048,20 @@ L4F2C:
     ldy #>msg_1bde
     jsr print_string
     jmp ask_play_again
-L4F49:
+@
     lda $1480
     cmp #$02
-    beq L4F58
+    beq @+
     lda #$ff
     sta cmd_prep
-    jmp L4FE8
-L4F58:
-    jsr L3C98
+    jmp @+7
+@
+    jsr sub_3c98
     cmp #$ff
-    bne L4F65
-    jsr L3D81
+    bne @+
+    jsr sub_3d81
     jmp print_random_cant_do
-L4F65:
+@
     dec $1480
     lda $1489
     sta cur_noun
@@ -5071,38 +5071,38 @@ L4F65:
     sta cur_adj2
     ldx cmd_verb_id
     lda prep_table_1,x
-    jsr L3B51
+    jsr sub_3b51
     lda $2d0b
     sta cmd_prep
     lda $1484
     cmp #$01
-    beq L4FE8
+    beq @+5
     cmp #$00
-    beq L4FA6
-    jsr L3D81
+    beq @+
+    jsr sub_3d81
     ldx #<msg_180e
     ldy #>msg_180e
     jsr print_string
     lda #$03
     sta gram_case
-    jmp L4FC6
-L4FA6:
-    jsr L3D81
+    jmp @+3
+@
+    jsr sub_3d81
     lda cmd_verb_arg1
     cmp #$ff
-    beq L4FBA
+    beq @+
     ldx #<msg_1828
     ldy #>msg_1828
     jsr print_string
-    jmp L4FC1
-L4FBA:
+    jmp @+1
+@
     ldx #<msg_181a
     ldy #>msg_181a
     jsr print_string
-L4FC1:
+@
     lda #$01
     sta gram_case
-L4FC6:
+@
     lda $1489
     sta cur_noun
     lda $1487
@@ -5112,37 +5112,37 @@ L4FC6:
     jsr print_inflected_noun
     lda cmd_verb_arg1
     cmp #$ff
-    beq L4FE5
+    beq @+
     jmp after_turn_jump
-L4FE5:
+@
     jmp command_loop
-L4FE8:
+@
     lda $1480
-    bne L4FF5
+    bne @+
     lda #$00
     sta cmd_obj_count
     jmp L50CD
-L4FF5:
+@
     ldy #$00
-L4FF7:
+@
     lda $2c90,y
     cmp #$02
-    beq L5007
+    beq @+
     iny
     cpy clause_idx
-    bne L4FF7
+    bne @-
     jmp print_random_cant_do
-L5007:
+@
     ldx cmd_verb_id
     lda $2cc2,y
     sta $2cc2
     sta cmd_obj_count
     lda verb_prep_req_table,x
-    bne L5041
+    bne @+1
     lda $2cc2
     cmp #$01
-    beq L5041
-    jsr L3D81
+    beq @+1
+    jsr sub_3d81
     jsr get_random_byte
     and #$03
     asl @
@@ -5154,11 +5154,11 @@ L5007:
     jsr print_string
     lda cmd_verb_arg1
     cmp #$ff
-    beq L503E
+    beq @+
     jmp after_turn_jump
-L503E:
+@
     jmp command_loop
-L5041:
+@
     lda #$00
     sta $1480
     lda $2cba,y
@@ -5174,33 +5174,33 @@ L5041:
     lda #>verb_syntax_table
     sta ZP_6A
     ldx cmd_verb_id
-    beq L507D
-L506B:
+    beq @+1
+@
     ldy #$00
     lda (ZP_69),y
     INCPTR ZP_69
     cmp #$00
-    bne L506B
+    bne @-
     dex
-    bne L506B
-L507D:
+    bne @-
+@
     ldy #$00
     lda (ZP_69),y
-    bne L5089
-    jsr L3D81
+    bne @+
+    jsr sub_3d81
     jmp print_random_cant_do
-L5089:
+@
     cmp $14a3
-    bne L5096
+    bne @+
     iny
     lda (ZP_69),y
     and $14a2
-    bne L50A7
-L5096:
+    bne @+1
+@
     INCPTR ZP_69
     INCPTR ZP_69
-    jmp L507D
-L50A7:
+    jmp @-2
+@
     ldx $1480
     ldy clause_idx
     lda $2ceb,y
@@ -5213,24 +5213,24 @@ L50A7:
     inc $1480
     ldx $1480
     cpx $2cc2
-    bne L50A7
+    bne @-
 L50CD:
     ldx cmd_verb_id
     lda prep_table_2,x
-    bne L50E2
+    bne @+1
     lda cmd_prep
     cmp #$ff
-    beq L50ED
-L50DC:
-    jsr L3D81
+    beq @+2
+@
+    jsr sub_3d81
     jmp print_random_cant_do
-L50E2:
+@
     cmp #$02
-    bne L50ED
+    bne @+
     lda cmd_prep
     cmp #$ff
-    bne L50DC
-L50ED:
+    bne @-1
+@
     lda cmd_verb_id
     asl @
     tay
@@ -5242,28 +5242,28 @@ L50ED:
 verb_0_go:
     lda cmd_obj_count
     cmp #$01
-    beq L5109
+    beq @+
     jmp print_random_cant_do
-L5109:
+@
     lda $148a
     sta cur_adj1
     lda $1492
     sta cur_adj2
     lda $149a
     sta cur_noun
-    jsr L3E8E
+    jsr sub_3e8e
     cmp #$ff
-    beq L5128
+    beq @+
     sta temp_dir_idx
-    jmp L5177
-L5128:
+    jmp @+5
+@
     lda #$01
-    jsr L3B51
-    jsr L3F44
+    jsr sub_3b51
+    jsr sub_3f44
     cmp #$ff
-    bne L5137
+    bne @+
     jmp after_turn_jump
-L5137:
+@
     lda #$00
     sta clause_idx
 L513C:
@@ -5273,27 +5273,27 @@ L513C:
     ldy #$06
     jsr read_bank_byte
     and #$20
-    beq L5157
+    beq @+
     jsr read_bank_byte
     and #$50
     cmp #$40
-    bne L515D
-L5157:
-    jsr L3EB4
+    bne @+1
+@
+    jsr sub_3eb4
     jmp after_turn_jump
-L515D:
+@
     lda $2d0b
     jsr get_object_ptr
     ldy #$03
     jsr read_bank_byte
     cmp current_room
-    bne L516E
+    bne @+
     iny
-L516E:
+@
     jsr read_bank_byte
     sta $14a5
     jmp L523F
-L5177:
+@
     RAMON
     lda $c010
     sta ZP_69
@@ -5301,9 +5301,9 @@ L5177:
     sta ZP_6A
     ROMON
     ldx current_room
-L5194:
+@
     dex
-    beq L51A7
+    beq @+
     lda ZP_69
     clc
     adc #$0a
@@ -5311,55 +5311,55 @@ L5194:
     lda ZP_6A
     adc #$00
     sta ZP_6A
-    jmp L5194
-L51A7:
+    jmp @-
+@
     ldy temp_dir_idx
     jsr read_bank_byte
     sta $14a5
     cmp #$00
-    bne L51C1
-    jsr L3D81
+    bne @+
+    jsr sub_3d81
     ldx #<msg_184c
     ldy #>msg_184c
     jsr print_string
     jmp after_turn_jump
-L51C1:
+@
     lda #$01
     sta temp_obj_idx
-L51C6:
+@
     lda temp_obj_idx
     jsr get_object_ptr
     ldy #$00
     jsr read_bank_byte
     cmp #$fe
-    beq L5232
+    beq @+4
     ldy #$05
     jsr read_bank_byte
     and #$60
-    bne L522C
+    bne @+3
     ldy #$03
     jsr read_bank_byte
     cmp current_room
-    beq L5204
+    beq @+1
     iny
     jsr read_bank_byte
     cmp current_room
-    bne L522C
+    bne @+3
     ldy #$05
     jsr read_bank_byte
     cmp #$08
-    bcs L51FF
+    bcs @+
     eor #$04
-    jmp L5209
-L51FF:
+    jmp @+2
+@
     eor #$01
-    jmp L5209
-L5204:
+    jmp @+1
+@
     ldy #$05
     jsr read_bank_byte
-L5209:
+@
     cmp temp_dir_idx
-    bne L522C
+    bne @+
     lda temp_obj_idx
     sta $2d0b
     sta cmd_obj_list
@@ -5371,10 +5371,10 @@ L5209:
     lda #$08
     sta $14a2
     jmp L513C
-L522C:
+@
     inc temp_obj_idx
-    jmp L51C6
-L5232:
+    jmp @-4
+@
     lda temp_dir_idx
     ora #$f0
     sta cmd_obj_list
@@ -5383,49 +5383,49 @@ L5232:
 L523F:
     lda cmd_verb_arg1
     cmp #$ff
-    bne L5286
+    bne @+1
     lda #$05
-    jsr L40B4
-    bne L5266
+    jsr sub_40b4
+    bne @+
     lda #$05
     jsr get_object_ptr
     ldy #$03
     jsr read_bank_byte
     cmp current_room
-    bne L5266
+    bne @+
     ldx #<msg_1cf5
     ldy #>msg_1cf5
     jsr print_string
     jmp after_turn_jump
-L5266:
+@
     lda #$31
-    jsr L40B4
-    bne L5286
+    jsr sub_40b4
+    bne @+
     lda #$31
     jsr get_object_ptr
     ldy #$03
     jsr read_bank_byte
     cmp current_room
-    bne L5286
+    bne @+
     ldx #<msg_1d13
     ldy #>msg_1d13
     jsr print_string
     jmp after_turn_jump
-L5286:
-    jsr L3DFD
+@
+    jsr sub_3dfd
     lda cmd_verb_arg1
     cmp #$ff
-    beq L52CD
+    beq @+2
     pha
     cmp #$01
-    bne L52A3
+    bne @+
     lda cmd_obj_list
     cmp #$27
-    bne L52A3
+    bne @+
     ldx #<msg_1e57
     ldy #>msg_1e57
     jsr print_string
-L52A3:
+@
     pla
     jsr get_object_ptr
     RAMON
@@ -5435,25 +5435,25 @@ L52A3:
     ROMON
     lda cmd_verb_arg1
     cmp #$01
-    bne L52CA
+    bne @+
     lda #$01
     sta turn_wait_cnt
-L52CA:
+@
     jmp after_turn_jump
-L52CD:
+@
     lda cmd_obj_list
     cmp #$22
-    bcc L52E5
+    bcc @+
     cmp #$24
-    bcs L52E5
+    bcs @+
     ldx #<msg_1d64
     ldy #>msg_1d64
     jsr print_string
     jsr delay_short
-    jmp L532C
-L52E5:
+    jmp @+2
+@
     cmp #$27
-    bne L5314
+    bne @+
     ldx #<msg_1d86
     ldy #>msg_1d86
     jsr print_string
@@ -5467,10 +5467,10 @@ L52E5:
     iny
     sta (ZP_69),y
     ROMON
-    jmp L532C
-L5314:
+    jmp @+1
+@
     cmp #$2b
-    bne L532C
+    bne @+
     ldx #<msg_1dff
     ldy #>msg_1dff
     jsr print_string
@@ -5478,11 +5478,11 @@ L5314:
     ldx #<msg_1e33
     ldy #>msg_1e33
     jsr print_string
-    jmp L532C
-L532C:
+    jmp @+
+@
     lda $14a5
     sta current_room
-L5332:
+@
     lda current_room
     jsr load_room_exits
     jsr describe_room
@@ -5490,133 +5490,133 @@ L5332:
     jmp after_turn_jump
 verb_1_take:
     lda cmd_obj_count
-    beq L5332
+    beq @-
     lda #$1f
-    jsr L3DB5
+    jsr sub_3db5
     cmp #$ff
-    bne L5352
+    bne @+
     jmp after_turn_jump
-L5352:
+@
     ldx #$00
     stx clause_idx
-L5357:
+@
     ldx clause_idx
     cpx cmd_obj_count
-    bne L5362
+    bne @+
     jmp after_turn_jump
-L5362:
-    jsr L3D81
+@
+    jsr sub_3d81
     lda cmd_verb_arg1
     cmp #$ff
-    beq L5376
+    beq @+
     ldx #<msg_19fa
     ldy #>msg_19fa
     jsr print_string
-    jmp L537D
-L5376:
+    jmp @+1
+@
     ldx #<msg_19f0
     ldy #>msg_19f0
     jsr print_string
-L537D:
+@
     ldx clause_idx
     lda #$03
     sta gram_case
     lda cmd_obj_list,x
-    jsr L2F1D
+    jsr sub_2f1d
     lda #$0d
     CHROUT
     ldx clause_idx
     lda cmd_obj_list,x
-    jsr L48A8
+    jsr sub_48a8
     inc clause_idx
-    jmp L5357
+    jmp @-3
 verb_2_drop:
     lda cmd_verb_arg1
     cmp #$ff
-    beq L53AC
-    jsr L3D81
+    beq @+
+    jsr sub_3d81
     jmp print_random_cant_do
-L53AC:
+@
     lda #$00
     sta print_hdr_flag
     lda #$03
     sta gram_case
     lda #$01
     sta temp_obj_idx
-L53BB:
+@
     lda temp_obj_idx
     jsr get_object_ptr
     ldy #$00
     jsr read_bank_byte
     cmp #$fe
-    bne L53CD
+    bne @+
     jmp after_turn_jump
-L53CD:
+@
     ldy #$05
     jsr read_bank_byte
     and #$60
-    beq L53F9
+    beq @+1
     ldy #$03
     jsr read_bank_byte
     cmp #$ff
-    bne L53F9
+    bne @+1
     lda print_hdr_flag
-    bne L53EE
+    bne @+
     inc print_hdr_flag
     ldx #<msg_1a0a
     ldy #>msg_1a0a
     jsr print_string
-L53EE:
+@
     lda #$0d
     CHROUT
     lda temp_obj_idx
     jsr print_object_name
-L53F9:
+@
     inc temp_obj_idx
-    jmp L53BB
+    jmp @-3
 verb_3_open_close:
     lda cmd_prep
     cmp #$ff
-    bne L540B
+    bne @+
     lda #$0d
-    jmp L5429
-L540B:
+    jmp @+2
+@
     jsr get_object_ptr
     ldy #$06
     jsr read_bank_byte
     and #$80
-    beq L5427
+    beq @+
     jsr read_bank_byte
     and #$08
-    bne L5427
+    bne @+
     lda cmd_prep
-    jsr L4894
+    jsr sub_4894
     jmp after_turn_jump
-L5427:
+@
     lda #$10
-L5429:
-    jsr L3DB5
+@
+    jsr sub_3db5
     cmp #$ff
-    bne L5433
+    bne @+
     jmp after_turn_jump
-L5433:
+@
     lda #$00
     sta clause_idx
-L5438:
+@
     ldx clause_idx
     cpx cmd_obj_count
-    bne L5443
-    jmp L54CF
-L5443:
+    bne @+
+    jmp @+4
+@
     lda cmd_obj_list,x
     jsr get_object_ptr
     ldy #$06
     jsr read_bank_byte
     and #$01
-    bne L5458
-    jsr L3EB4
-    jmp L549F
-L5458:
+    bne @+
+    jsr sub_3eb4
+    jmp @+1
+@
     RAMON
     ldy #$05
     lda (ZP_69),y
@@ -5627,78 +5627,78 @@ L5458:
     lda cmd_verb_arg1
     sta (ZP_69),y
     ROMON
-    jsr L3DFD
+    jsr sub_3dfd
     ldx clause_idx
     lda cmd_obj_list,x
     cmp #$11
-    bne L549F
+    bne @+
     lda #$0f
     jsr get_object_ptr
     ldy #$03
     jsr read_bank_byte
     cmp current_room
-    bne L549F
+    bne @+
     ldx #<msg_1bde
     ldy #>msg_1bde
     jsr print_string
     jmp ask_play_again
-L549F:
+@
     ldx clause_idx
     lda cmd_obj_list,x
     cmp #$33
-    bne L54C9
+    bne @+
     lda cmd_verb_arg1
     cmp #$ff
-    bne L54C9
+    bne @+
     lda #$01
     jsr get_object_ptr
     ldy #$03
     jsr read_bank_byte
     cmp current_room
-    bne L54C9
+    bne @+
     ldx #<msg_2179
     ldy #>msg_2179
     jsr print_string
     jmp ask_play_again
-L54C9:
+@
     inc clause_idx
-    jmp L5438
-L54CF:
+    jmp @-4
+@
     jmp after_turn_jump
 verb_4_examine:
     lda cmd_prep
     cmp cmd_verb_arg1
-    bne L54E4
-L54DA:
+    bne @+1
+@
     ldx #<msg_1791
     ldy #>msg_1791
     jsr print_string
     jmp after_turn_jump
-L54E4:
+@
     lda #$02
-    jsr L3DB5
+    jsr sub_3db5
     cmp #$ff
-    bne L54F0
+    bne @+
     jmp after_turn_jump
-L54F0:
+@
     lda cmd_prep
     cmp #$ff
-    beq L5505
+    beq @+
     jsr get_object_ptr
     ldy #$06
     jsr read_bank_byte
     and #$88
     cmp #$88
-    bne L54DA
-L5505:
+    bne @-2
+@
     lda #$00
     sta clause_idx
-L550A:
+@
     ldx clause_idx
     cpx cmd_obj_count
-    bne L5515
+    bne @+
     jmp after_turn_jump
-L5515:
+@
     lda cmd_obj_list,x
     jsr get_object_ptr
     RAMON
@@ -5706,47 +5706,47 @@ L5515:
     lda cmd_prep
     sta (ZP_69),y
     ROMON
-    jsr L3DFD
+    jsr sub_3dfd
     inc clause_idx
-    jmp L550A
+    jmp @-1
 verb_5_inventory:
     lda #$02
-    jsr L3DB5
+    jsr sub_3db5
     cmp #$ff
-    bne L5547
+    bne @+
     jmp after_turn_jump
-L5547:
+@
     lda #$03
     sta $1485
     lda #$00
     sta clause_idx
     lda cmd_prep
     cmp #$ff
-    beq L5573
+    beq @+2
     jsr get_object_ptr
     ldy #$06
     jsr read_bank_byte
     and #$04
-    bne L556A
-L5564:
-    jsr L3EB4
+    bne @+1
+@
+    jsr sub_3eb4
     jmp after_turn_jump
-L556A:
+@
     jsr read_bank_byte
     and #$50
     cmp #$40
-    beq L5564
-L5573:
+    beq @-1
+@
     ldx clause_idx
     cpx cmd_obj_count
-    bne L557E
+    bne @+
     jmp after_turn_jump
-L557E:
+@
     lda cmd_obj_list,x
     jsr get_object_ptr
     lda cmd_prep
     cmp #$ff
-    beq L55AB
+    beq @+
     RAMON
     ldy #$03
     lda cmd_prep
@@ -5755,8 +5755,8 @@ L557E:
     lda #$40
     sta (ZP_69),y
     ROMON
-    jmp L55C8
-L55AB:
+    jmp @+1
+@
     RAMON
     ldy #$03
     lda current_room
@@ -5765,29 +5765,29 @@ L55AB:
     ldy #$05
     sta (ZP_69),y
     ROMON
-L55C8:
-    jsr L3DFD
+@
+    jsr sub_3dfd
     inc clause_idx
-    jmp L5573
+    jmp @-3
 verb_7_attack:
     lda #$00
     sta clause_idx
     lda #$9f
     CHROUT
     lda #$01
-    jsr L3DB5
+    jsr sub_3db5
     cmp #$ff
-    bne L55E7
+    bne @+
     jmp after_turn_jump
-L55E7:
+@
     lda #$00
     sta clause_idx
-L55EC:
+@
     lda clause_idx
     cmp cmd_obj_count
-    bne L55F7
+    bne @+
     jmp after_turn_jump
-L55F7:
+@
     ldx clause_idx
     lda cmd_obj_list,x
     sta $14a6
@@ -5795,99 +5795,99 @@ L55F7:
     ldy #$06
     jsr read_bank_byte
     and #$40
-    bne L563A
-L560C:
-    jsr L3EB4
-    jmp L56B5
-L5612:
-    jsr L48EE
+    bne @+3
+@
+    jsr sub_3eb4
+    jmp @+6
+@
+    jsr sub_48ee
     cmp #$ff
-    beq L560C
+    beq @-1
     lda cmd_verb_arg1
     cmp #$01
-    bne L5630
+    bne @+
     ldx clause_idx
     lda cmd_obj_list,x
     cmp #$21
-    bne L5630
-    jsr L4A30
-    jmp L56B5
-L5630:
+    bne @+
+    jsr sub_4a30
+    jmp @+5
+@
     lda cmd_prep
     cmp #$ff
-    beq L566B
-    jmp L560C
-L563A:
+    beq @+1
+    jmp @-2
+@
     ldy #$07
     jsr read_bank_byte
     cmp #$fe
-    beq L5612
+    beq @-2
     cmp cmd_prep
-    beq L5674
+    beq @+1
     sta temp_obj_idx
     lda cmd_prep
     cmp #$ff
-    bne L560C
+    bne @-3
     lda temp_obj_idx
     jsr get_object_ptr
     ldy #$05
     jsr read_bank_byte
     and #$60
-    beq L560C
+    beq @-3
     ldy #$03
     jsr read_bank_byte
     cmp cmd_verb_arg1
-    bne L560C
-L566B:
+    bne @-3
+@
     ldx clause_idx
     lda cmd_obj_list,x
     jsr get_object_ptr
-L5674:
+@
     ldy #$06
     jsr read_bank_byte
     and #$10
-    bne L56AC
+    bne @+
     RAMON
     ldy #$06
     lda (ZP_69),y
     ora #$10
     sta (ZP_69),y
     ROMON
-    jsr L3DFD
+    jsr sub_3dfd
     lda cmd_verb_arg1
     cmp #$ff
-    bne L56AC
+    bne @+
     ldx clause_idx
     lda cmd_obj_list,x
     cmp #$21
-    bne L56AC
+    bne @+
     inc $2d12
-L56AC:
+@
     lda $14a6
     sta temp_obj_idx
-    jsr L3006
-L56B5:
+    jsr sub_3006
+@
     inc clause_idx
-    jmp L55EC
+    jmp @-9
 verb_8_give_throw:
     lda #$00
     sta clause_idx
     lda #$9f
     CHROUT
     lda #$01
-    jsr L3DB5
+    jsr sub_3db5
     cmp #$ff
-    bne L56D1
+    bne @+
     jmp after_turn_jump
-L56D1:
+@
     lda #$00
     sta clause_idx
-L56D6:
+@
     lda clause_idx
     cmp cmd_obj_count
-    bne L56E1
+    bne @+
     jmp after_turn_jump
-L56E1:
+@
     ldx clause_idx
     lda cmd_obj_list,x
     sta $14a6
@@ -5895,150 +5895,150 @@ L56E1:
     ldy #$06
     jsr read_bank_byte
     and #$40
-    bne L570D
-L56F6:
-    jsr L3EB4
-    jmp L5774
-L56FC:
-    jsr L48EE
+    bne @+2
+@
+    jsr sub_3eb4
+    jmp @+5
+@
+    jsr sub_48ee
     cmp #$ff
-    beq L56F6
+    beq @-1
     lda cmd_prep
     cmp #$ff
-    beq L573E
-    jmp L56F6
-L570D:
+    beq @+1
+    jmp @-1
+@
     ldy #$07
     jsr read_bank_byte
     cmp #$fe
-    beq L56FC
+    beq @-1
     cmp cmd_prep
-    beq L5747
+    beq @+1
     sta temp_obj_idx
     lda cmd_prep
     cmp #$ff
-    bne L56F6
+    bne @-2
     lda temp_obj_idx
     jsr get_object_ptr
     ldy #$05
     jsr read_bank_byte
     and #$60
-    beq L56F6
+    beq @-2
     ldy #$03
     jsr read_bank_byte
     cmp cmd_verb_arg1
-    bne L56F6
-L573E:
+    bne @-2
+@
     ldx clause_idx
     lda cmd_obj_list,x
     jsr get_object_ptr
-L5747:
+@
     ldy #$06
     jsr read_bank_byte
     and #$10
-    beq L576B
+    beq @+
     RAMON
     ldy #$06
     lda (ZP_69),y
     and #$ef
     sta (ZP_69),y
     ROMON
-    jsr L3DFD
-L576B:
+    jsr sub_3dfd
+@
     lda $14a6
     sta temp_obj_idx
-    jsr L3006
-L5774:
+    jsr sub_3006
+@
     inc clause_idx
-    jmp L56D6
+    jmp @-8
 verb_9_put_in:
     lda cmd_verb_arg1
     cmp #$0d
-    bne L57D9
+    bne @+2
     lda cmd_prep
     cmp #$ff
-    bne L57D9
+    bne @+2
     lda cmd_obj_count
     cmp #$01
-    bne L57D9
+    bne @+2
     lda $149a
     cmp #$0c
-    bne L57D9
+    bne @+2
     lda $148a
     cmp #$ff
-    bne L57D9
-    jsr L3D81
+    bne @+2
+    jsr sub_3d81
     lda $2d19
-    bne L57B2
+    bne @+
     ldx #<msg_2282
     ldy #>msg_2282
     jsr print_string
     inc $2d19
     jmp after_turn_jump
-L57B2:
+@
     lda #$0e
     jsr get_object_ptr
     ldy #$03
     jsr read_bank_byte
     cmp #$00
-    bne L57CA
+    bne @+
     ldx #<msg_22ab
     ldy #>msg_22ab
     jsr print_string
     jmp after_turn_jump
-L57CA:
+@
     cmp current_room
-    beq L57D9
+    beq @+
     ldx #<msg_22c3
     ldy #>msg_22c3
     jsr print_string
     jmp after_turn_jump
-L57D9:
+@
     lda #$01
-    jsr L3DB5
+    jsr sub_3db5
     cmp #$ff
-    bne L57E5
+    bne @+
     jmp after_turn_jump
-L57E5:
+@
     lda #$00
     sta clause_idx
-L57EA:
+@
     ldx clause_idx
     cpx cmd_obj_count
-    bne L57F5
+    bne @+
     jmp after_turn_jump
-L57F5:
+@
     lda cmd_obj_list,x
     jsr get_object_ptr
     ldy #$06
     jsr read_bank_byte
     and #$02
-    bne L580A
-L5804:
-    jsr L3EB4
-    jmp L5826
-L580A:
+    bne @+1
+@
+    jsr sub_3eb4
+    jmp @+1
+@
     ldy #$07
     jsr read_bank_byte
     cmp #$fe
-    beq L582C
+    beq @+1
     cmp cmd_prep
-    bne L5804
+    bne @-1
     ldx clause_idx
     lda cmd_obj_list,x
     pha
-    jsr L3DFD
+    jsr sub_3dfd
     pla
-    jsr L48C4
-L5826:
+    jsr sub_48c4
+@
     inc clause_idx
-    jmp L57EA
-L582C:
+    jmp @-4
+@
     lda cmd_verb_arg1
     cmp #$ff
-    beq L5836
-    jmp L5804
-L5836:
+    beq @+
+    jmp @-3
+@
     ldx #<msg_1afb
     ldy #>msg_1afb
     jsr print_string
@@ -6062,86 +6062,86 @@ verb_10_wait:
 verb_11_quit:
     lda cmd_verb_arg1
     cmp #$ff
-    beq L586F
+    beq @+
     jmp print_random_cant_do
-L586F:
+@
     ldx #<msg_1861
     ldy #>msg_1861
     jsr print_string
-L5876:
+@
     GETIN
     cmp #$54
-    bne L5880
+    bne @+
     jmp ask_play_again
-L5880:
+@
     cmp #$4e
-    bne L5876
+    bne @-1
     jmp command_loop
 verb_12_save:
     lda cmd_verb_arg1
     cmp #$ff
-    beq L5897
+    beq @+
     cmp #$01
-    bne L5897
+    bne @+
     lda #$02
     sta turn_wait_cnt
-L5897:
-    jsr L3DFD
+@
+    jsr sub_3dfd
     jmp after_turn_jump
 verb_13_eat_drink:
     lda #$01
     cmp cmd_obj_count
-    beq L58A7
+    beq @+
     jmp print_random_cant_do
-L58A7:
+@
     lda #$0f
-    jsr L3DB5
+    jsr sub_3db5
     cmp #$ff
-    bne L58B3
+    bne @+
     jmp after_turn_jump
-L58B3:
+@
     lda #$00
     sta clause_idx
     lda cmd_obj_list
     cmp #$12
-    beq L58C5
-    jsr L3EB4
+    beq @+
+    jsr sub_3eb4
     jmp after_turn_jump
-L58C5:
+@
     lda cmd_verb_arg1
     cmp #$03
-    beq L5909
+    beq @+2
     lda #$0d
     CHROUT
-    jsr L3D81
+    jsr sub_3d81
     lda #$9f
     CHROUT
     lda cmd_verb_arg1
     cmp #$ff
-    beq L58EA
+    beq @+
     ldx #<msg_1834
     ldy #>msg_1834
     jsr print_string
-    jmp L58F1
-L58EA:
+    jmp @+1
+@
     ldx #<msg_183f
     ldy #>msg_183f
     jsr print_string
-L58F1:
+@
     lda cmd_verb_id
     sta $2c73
     lda #$02
     sta $2c8b
-    jsr L3482
+    jsr sub_3482
     ldx #<msg_1ace
     ldy #>msg_1ace
     jsr print_string
     jmp after_turn_jump
-L5909:
-    jsr L3DFD
+@
+    jsr sub_3dfd
     lda #$0d
     CHROUT
-    jsr L3D81
+    jsr sub_3d81
     ldx #<msg_1a35
     ldy #>msg_1a35
     jsr print_string
@@ -6150,29 +6150,29 @@ L5909:
     jmp after_turn_jump
 verb_14_fill:
     lda #$02
-    jsr L3DB5
+    jsr sub_3db5
     cmp #$ff
-    bne L592F
+    bne @+
     jmp after_turn_jump
-L592F:
+@
     lda #$00
     sta clause_idx
-L5934:
+@
     ldx clause_idx
     cpx cmd_obj_count
-    bne L593F
+    bne @+
     jmp after_turn_jump
-L593F:
+@
     ldy #$00
-L5941:
+@
     lda fillable_objs_table,y
-    bne L594C
-    jsr L3EB4
-    jmp L5982
-L594C:
+    bne @+
+    jsr sub_3eb4
+    jmp @+2
+@
     iny
     cmp cmd_obj_list,x
-    bne L5941
+    bne @-1
     jsr get_object_ptr
     RAMON
     ldy #$03
@@ -6181,27 +6181,27 @@ L594C:
     iny
     sta (ZP_69),y
     ROMON
-    jsr L3DFD
+    jsr sub_3dfd
     lda cmd_verb_arg1
     cmp #$ff
-    bne L597B
+    bne @+
     sta hunger_hi
-L597B:
+@
     ldx #<msg_210c
     ldy #>msg_210c
     jsr print_string
-L5982:
+@
     inc clause_idx
-    jmp L5934
+    jmp @-5
 after_turn_jump:
     jmp L4D44
 ask_play_again:
     ldx #<msg_244c
     ldy #>msg_244c
     jsr print_string
-L5992:
+@
     GETIN
-    beq L5992
+    beq @-
     ldx #$f8
     txs
     jmp main_entry
@@ -6212,7 +6212,7 @@ L599D:
     ldx #<msg_256e
     ldy #>msg_256e
     jsr print_string
-    jmp L5992
+    jmp @-
 copy_dict_to_c000:
     ldy #$00
     sty ZP_6B
@@ -6223,16 +6223,16 @@ copy_dict_to_c000:
     lda #>dict_data_src
     sta ZP_6A
     RAMON
-L59C8:
+@
     lda (ZP_69),y
     sta (ZP_6B),y
     iny
-    bne L59C8
+    bne @-
     inc ZP_6A
     inc ZP_6C
     lda ZP_6C
     cmp #$d0
-    bne L59C8
+    bne @-
     ROMON
     rts
 

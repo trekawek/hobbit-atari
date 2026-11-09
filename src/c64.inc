@@ -39,9 +39,9 @@ ZP_6C = $6c
 ; 16-bit pointer increment (matches original 7-byte sequence with abs high-byte inc)
 .macro INCPTR zp
     inc :zp
-    bne @+
+    bne skip
     inc.w :zp+1
-@
+skip
 .endm
 
 ; Initialize VIC-II colors and custom character generator at $0800
