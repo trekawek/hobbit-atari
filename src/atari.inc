@@ -212,49 +212,21 @@ atari_dlist:
     lda #$ff
     sta ATARI_CH
 
-    ; Populate default initial save state in save_ram_buf ($A800) on first boot
-    lda save_ram_valid
-    bne @+4
-    inc save_ram_valid
-    ldx #$0d
-@   lda default_save_hdr,x
-    sta save_ram_buf,x
-    dex
-    bpl @-
-    jsr atari_ramon
-    lda $c00e
-    sta zp_ptr_lo
-    lda $c00f
-    sta zp_ptr_hi
-    lda #<[save_ram_buf+14]
-    sta io_ram_ptr_lo
-    lda #>[save_ram_buf+14]
-    sta io_ram_ptr_hi
-@   ldy #$00
-    lda (zp_ptr_lo),y
-    sta (io_ram_ptr_lo),y
-    cmp #$fe
-    beq @+2
-@   lda (zp_ptr_lo),y
-    sta (io_ram_ptr_lo),y
-    iny
-    cpy #$08
-    bne @-
-    clc
-    lda zp_ptr_lo
-    adc #$08
-    sta zp_ptr_lo
-    bcc @+
-    inc zp_ptr_hi
-@   clc
-    lda io_ram_ptr_lo
-    adc #$08
-    sta io_ram_ptr_lo
-    bcc @-2
-    inc io_ram_ptr_hi
-    jmp @-2
-@   jsr atari_romon
-@   cli
+    ; Configure Atari OS warm-reset vectors (F5 / System Reset) to restart the game cleanly
+    lda #$01
+    sta $09                     ; BOOT? = 1 (disk boot succeeded)
+    lda #<atari_warmstart
+    sta $0c                     ; DOSINI lo
+    lda #>atari_warmstart
+    sta $0d                     ; DOSINI hi
+    lda #<main_entry
+    sta $0a                     ; DOSVEC lo
+    sta $02                     ; CASINI lo
+    lda #>main_entry
+    sta $0b                     ; DOSVEC hi
+    sta $03                     ; CASINI hi
+
+    cli
     rts
 
 ; Memory Banking ($C000-$CFFF RAM under Atari OS ROM)
@@ -556,37 +528,63 @@ pokey_shifted_table:
     sta io_ram_ptr_lo
     lda #>save_ram_buf
     sta io_ram_ptr_hi
+    lda #$00
+    sta io_error_flag
 
     ; Only perform CIO read on Load (io_mode == $00)
     lda io_mode
-    bne @+1
+    beq @+
+    rts
 
-    ; Read 511 ($01FF) bytes from "D:HOBBIDATA" (disk) or "C:" (tape) into save_ram_buf
+@   ; Read 439 ($01B7) bytes from "D:HOBBIDATA" (disk) or "C:" (tape) into save_ram_buf
     jsr cio_prepare_device
     lda #$04                    ; ICAX1 = $04 (read)
     sta ATARI_ICAX1
     lda #$03                    ; OPEN
     sta ATARI_ICCOM
     jsr ATARI_CIOV
-    bmi @+                      ; If error/BREAK/no media, keep existing save_ram_buf
+    bpl @+
+    inc io_error_flag
+    jmp @+3
 
-    ldx #$10
+@   ldx #$10
     lda #$07                    ; GET BYTES
     sta ATARI_ICCOM
     lda #<save_ram_buf
     sta ATARI_ICBAL
     lda #>save_ram_buf
     sta ATARI_ICBAH
-    lda #$ff
+    lda #$b7
     sta ATARI_ICBLL
     lda #$01
     sta ATARI_ICBLH
     jsr ATARI_CIOV
-    jsr cio_close_iocb
+    bpl @+
+    inc io_error_flag
+    jmp @+2
+
+@   ; Verify sentinel byte ($FE) at end of loaded object table (save_ram_buf + 438)
+    lda save_ram_buf+438
+    cmp #$fe
+    bne @+
     lda #$01
     sta save_ram_valid
+    jmp @+1
+@   inc io_error_flag
+@   jsr cio_close_iocb
 @   jsr cio_finish_device
-@   rts
+    lda io_error_flag
+    bne @+
+    rts
+@   ; On read error, report failure and return to "CZY ODTWARZASZ NAGRANĄ GRĘ? (T/N)"
+    ldx #<msg_read_err
+    ldy #>msg_read_err
+    jsr print_string
+    pla
+    pla
+    pla
+    pla
+    jmp main_entry+6
 
 .def :atari_chkin
     lda #$01
@@ -608,34 +606,47 @@ pokey_shifted_table:
 .def :atari_close
     lda #$00
     sta io_channel
+    sta io_error_flag
 
     ; Only perform CIO write on Save (io_mode != $00)
     lda io_mode
-    beq @+1
+    bne @+
+    rts
 
-    ; Write 511 ($01FF) bytes from save_ram_buf to "D:HOBBIDATA" (disk) or "C:" (tape)
+@   ; Write 439 ($01B7) bytes from save_ram_buf to "D:HOBBIDATA" (disk) or "C:" (tape)
     jsr cio_prepare_device
     lda #$08                    ; ICAX1 = $08 (write)
     sta ATARI_ICAX1
     lda #$03                    ; OPEN
     sta ATARI_ICCOM
     jsr ATARI_CIOV
-    bmi @+
+    bpl @+
+    inc io_error_flag
+    jmp @+2
 
-    ldx #$10
+@   ldx #$10
     lda #$0b                    ; PUT BYTES
     sta ATARI_ICCOM
     lda #<save_ram_buf
     sta ATARI_ICBAL
     lda #>save_ram_buf
     sta ATARI_ICBAH
-    lda #$ff
+    lda #$b7
     sta ATARI_ICBLL
     lda #$01
     sta ATARI_ICBLH
     jsr ATARI_CIOV
-    jsr cio_close_iocb
+    bpl @+
+    inc io_error_flag
+@   jsr cio_close_iocb
+    bpl @+
+    inc io_error_flag
 @   jsr cio_finish_device
+    lda io_error_flag
+    beq @+
+    ldx #<msg_write_err
+    ldy #>msg_write_err
+    jmp print_string
 @   rts
 
 cio_prepare_device:
@@ -705,6 +716,8 @@ atari_io_put_byte:
 
 ; Bank Atari DOS 2.5 ($7000-$87FF) in and out of low RAM ($0800-$1FFF)
 dos_bank_in:
+    lda #$01
+    sta dos_is_banked
     lda #$e0
     sta ATARI_CHBAS
     sta ATARI_CHBASE
@@ -712,6 +725,8 @@ dos_bank_in:
 
 dos_bank_out:
     jsr swap_low_ram
+    lda #$00
+    sta dos_is_banked
     lda #$08
     sta ATARI_CHBAS
     sta ATARI_CHBASE
@@ -741,6 +756,22 @@ swap_low_ram:
     bne @-
     rts
 
+; Warm Reset (F5 / System Reset) handler called via DOSINI ($000C)
+atari_warmstart:
+    lda dos_is_banked
+    bne @+
+    lda $7d40                   ; Check if DOS 2.5 ($1540) is present in $7000-$87FF
+    cmp #$a9
+    bne @+1
+    jsr dos_bank_in
+@   jsr $1540                   ; Re-register 'D' in HATABS ($031A)
+    jsr dos_bank_out
+@   lda #<main_entry
+    sta $0a                     ; Point DOSVEC ($000A) to main_entry
+    lda #>main_entry
+    sta $0b
+    rts
+
 ; Entry point executed after XEX / AUTORUN.SYS segments finish loading
 atari_boot_entry:
     ; Mirror $1F9A-$1FFF into $879A-$87FF before swapping $0800-$1FFF <-> $7000-$87FF
@@ -758,11 +789,11 @@ atari_fn_disk:
 atari_fn_tape:
     dta c'C:', $9b
 
-; Default 14-byte savegame header (initial game state for Room 1)
-default_save_hdr:
-    dta $02, $00, $00, $00, $00, $00, $00, $00 ; turn_wait_cnt ($2D0F..$2D16)
-    dta $00, $b4, $00, $00, $00                ; hunger_lo/hi ($2D17..$2D1B)
-    dta $01                                    ; current_room ($2D07)
+msg_read_err:
+    dta CR, c'?B', PL_L, PL_A, c'D ODCZYTU', CR, $00
+
+msg_write_err:
+    dta CR, c'?B', PL_L, PL_A, c'D ZAPISU', CR, $00
 
 ; Atari Adapter State Variables
 cursor_row:     dta $00
@@ -777,6 +808,8 @@ chrin_save_y:   dta $00
 io_channel:     dta $00
 io_device:      dta $00
 io_mode:        dta $00
+io_error_flag:  dta $00
+dos_is_banked:  dta $00
 save_ram_valid: dta $00
 
     run atari_boot_entry
