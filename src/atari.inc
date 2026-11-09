@@ -557,30 +557,18 @@ pokey_shifted_table:
     lda #>save_ram_buf
     sta io_ram_ptr_hi
 
-    ; Only perform disk CIO on Load (io_mode == $00) with Disk (io_device == $08)
-    lda io_device
-    cmp #$08
-    bne @+1
+    ; Only perform CIO read on Load (io_mode == $00)
     lda io_mode
     bne @+1
 
-    ; Swap DOS 2.5 back into $0800-$1FFF and read "D:HOBBIDATA" into save_ram_buf
-    jsr dos_bank_in
-    jsr cio_close_iocb
-
-    ldx #$10
-    lda #<atari_fn_disk
-    sta ATARI_ICBAL
-    lda #>atari_fn_disk
-    sta ATARI_ICBAH
+    ; Read 511 ($01FF) bytes from "D:HOBBIDATA" (disk) or "C:" (tape) into save_ram_buf
+    jsr cio_prepare_device
     lda #$04                    ; ICAX1 = $04 (read)
     sta ATARI_ICAX1
-    lda #$00
-    sta ATARI_ICAX2
     lda #$03                    ; OPEN
     sta ATARI_ICCOM
     jsr ATARI_CIOV
-    bmi @+                      ; If file/disk not found, keep existing save_ram_buf
+    bmi @+                      ; If error/BREAK/no media, keep existing save_ram_buf
 
     ldx #$10
     lda #$07                    ; GET BYTES
@@ -597,7 +585,7 @@ pokey_shifted_table:
     jsr cio_close_iocb
     lda #$01
     sta save_ram_valid
-@   jsr dos_bank_out
+@   jsr cio_finish_device
 @   rts
 
 .def :atari_chkin
@@ -621,26 +609,14 @@ pokey_shifted_table:
     lda #$00
     sta io_channel
 
-    ; Only perform disk CIO on Save (io_mode != $00) with Disk (io_device == $08)
-    lda io_device
-    cmp #$08
-    bne @+1
+    ; Only perform CIO write on Save (io_mode != $00)
     lda io_mode
     beq @+1
 
-    ; Swap DOS 2.5 back into $0800-$1FFF and write save_ram_buf to "D:HOBBIDATA"
-    jsr dos_bank_in
-    jsr cio_close_iocb
-
-    ldx #$10
-    lda #<atari_fn_disk
-    sta ATARI_ICBAL
-    lda #>atari_fn_disk
-    sta ATARI_ICBAH
+    ; Write 511 ($01FF) bytes from save_ram_buf to "D:HOBBIDATA" (disk) or "C:" (tape)
+    jsr cio_prepare_device
     lda #$08                    ; ICAX1 = $08 (write)
     sta ATARI_ICAX1
-    lda #$00
-    sta ATARI_ICAX2
     lda #$03                    ; OPEN
     sta ATARI_ICCOM
     jsr ATARI_CIOV
@@ -659,7 +635,38 @@ pokey_shifted_table:
     sta ATARI_ICBLH
     jsr ATARI_CIOV
     jsr cio_close_iocb
-@   jsr dos_bank_out
+@   jsr cio_finish_device
+@   rts
+
+cio_prepare_device:
+    lda io_device
+    cmp #$08
+    bne @+
+    jsr dos_bank_in
+    jsr cio_close_iocb
+    ldx #$10
+    lda #<atari_fn_disk
+    sta ATARI_ICBAL
+    lda #>atari_fn_disk
+    sta ATARI_ICBAH
+    lda #$00
+    sta ATARI_ICAX2
+    rts
+@   jsr cio_close_iocb
+    ldx #$10
+    lda #<atari_fn_tape
+    sta ATARI_ICBAL
+    lda #>atari_fn_tape
+    sta ATARI_ICBAH
+    lda #$80                    ; ICAX2 = $80 (short inter-record gap for C:)
+    sta ATARI_ICAX2
+    rts
+
+cio_finish_device:
+    lda io_device
+    cmp #$08
+    bne @+
+    jmp dos_bank_out
 @   rts
 
 cio_close_iocb:
@@ -747,6 +754,9 @@ atari_boot_entry:
 
 atari_fn_disk:
     dta c'D:HOBBIDATA', $9b
+
+atari_fn_tape:
+    dta c'C:', $9b
 
 ; Default 14-byte savegame header (initial game state for Room 1)
 default_save_hdr:
