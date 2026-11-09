@@ -54,7 +54,7 @@ basic_stub:
     dta $00, $3c, $66, $60, $6e, $66, $3c, $00 ; Char $07 ('G')
 
 ; Stage-2 bootstrap embedded in character $08-$09 ($0840-$084D), copied to $0400
-boot_stage2:
+boot_stage_two:
     ldx #$00
 @
     lda font_backup,x
@@ -72,10 +72,10 @@ boot_stage2:
     dta $00, $3c, $66, $66, $66, $66, $3c, $00 ; Char $0f ('O')
 
 ; Stage-1 bootstrap embedded in character $10-$11 ($0880-$088D, SYS 2176)
-boot_stage1:
+boot_stage_one:
     ldx #$10
 @
-    lda boot_stage2,x
+    lda boot_stage_two,x
     sta $0400,x
     dex
     bpl @-
@@ -234,24 +234,24 @@ font_backup:
 ; $0D00-$0DC2: Startup Vector, Parser Syntax Rules & Verb Dispatch Table
 ; =============================================================================
 start:
-    jsr copy_dict_to_c000
+    jsr copy_dict_to_high_ram
     jmp main_entry
 
 obj_table_ptr:
     dta a($b000)
-syntax_rule_0:
+syntax_rule_open:
     dta $05, $02, $06, $02, $fe
-syntax_rule_1:
+syntax_rule_examine:
     dta $ff, $04, $fe
-syntax_rule_2:
+syntax_rule_inv:
     dta $03, $20, $04, $02, $fe
-syntax_rule_3:
+syntax_rule_combat:
     dta $ff, $10, $fe
-syntax_rule_4:
+syntax_rule_meta:
     dta $fe
-prep_table_1:
+prep_table_primary:
     dta $00, $00, $00, $01, $01, $01, $00, $02, $02, $02, $00, $00
-prep_table_2:
+prep_table_secondary:
     dta $00, $00, $00, $01, $01, $01, $00, $01, $01, $01, $00, $00
 
 ; 15-entry verb syntax table (3 bytes per verb ID $00..$0E)
@@ -282,21 +282,21 @@ obj_weight_table:
     dta $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $40, $40, $40
 
 verb_jump_table:
-    dta a(verb_0_go)
-    dta a(verb_1_take)
-    dta a(verb_2_drop)
-    dta a(verb_3_open_close)
-    dta a(verb_4_examine)
-    dta a(verb_5_inventory)
+    dta a(cmd_go)
+    dta a(cmd_take)
+    dta a(cmd_drop)
+    dta a(cmd_open_close)
+    dta a(cmd_examine)
+    dta a(cmd_inventory)
     dta a(print_random_cant_do)
-    dta a(verb_7_attack)
-    dta a(verb_8_give_throw)
-    dta a(verb_9_put_in)
-    dta a(verb_10_wait)
-    dta a(verb_11_quit)
-    dta a(verb_12_save)
-    dta a(verb_13_eat_drink)
-    dta a(verb_14_fill)
+    dta a(cmd_attack)
+    dta a(cmd_give_throw)
+    dta a(cmd_put_in)
+    dta a(cmd_save)
+    dta a(cmd_quit)
+    dta a(cmd_wait)
+    dta a(cmd_eat_drink)
+    dta a(cmd_fill)
 
 ; =============================================================================
 ; $0DC3-$147B: Title Screen Keyboard Diagram, HOBBIT Logo & Intro Story
@@ -319,7 +319,7 @@ str_kbd_top:
     dta $b1, $b2, $b1, $b2, $b1, $b2, $b1, $b2, $b1, $b2, $b1, $b2, $c0, $b2
     dta $c0, $c0, $c0, $c0, $c0, $ae, $00
 
-str_kbd_mid1:
+str_kbd_mid_upper:
     dta CR, C_BLU, c'  ', $dd, C_YEL, PL_A, C_BLU, $dd, C_YEL, PL_S, C_BLU
     dta $dd, c' ', $dd, c' ', $dd, c' ', $dd, c' ', $dd, c' ', $dd, c' '
     dta $dd, c' ', $dd, c' ', $dd, c' ', $dd, c' ', $dd, c'     ', $dd, CR
@@ -333,7 +333,7 @@ str_kbd_mid1:
     dta $c0, $c0, $c0, $c0, $c0, $bd, CR
     dta $00
 
-str_kbd_mid2:
+str_kbd_mid_lower:
     dta $dd, c'^^', $dd, C_YEL, PL_Z_AC, C_BLU, $dd, c' ', $dd, C_YEL
     dta PL_C, C_BLU, $dd, c' ', $dd, c' ', $dd, C_YEL, PL_N, C_BLU, $dd
     dta c' ', $dd, c' ', $dd, c' ', $dd, c' ', $dd, c'^^', $dd, CR
@@ -460,43 +460,43 @@ token_count:
     dta PL_Z_AC
 
 ; Expanded command strings for single/multi-letter direction abbreviations
-abbrev_exp_0: ; "IDŹ NA PÓŁNOC"
+abbrev_north: ; "IDŹ NA PÓŁNOC"
     dta c'ID', PL_Z_AC, c' NA P', PL_O, PL_L, c'NOC', $00
-abbrev_exp_1: ; "IDŹ NA PÓŁNOCNY WSCHÓD"
+abbrev_northeast: ; "IDŹ NA PÓŁNOCNY WSCHÓD"
     dta c'ID', PL_Z_AC, c' NA P', PL_O, PL_L, c'NOCNY WSCH', PL_O, c'D'
     dta $00
-abbrev_exp_2: ; "IDŹ NA WSCHÓD"
+abbrev_east: ; "IDŹ NA WSCHÓD"
     dta c'ID', PL_Z_AC, c' NA WSCH', PL_O, c'D', $00
-abbrev_exp_3: ; "IDŹ NA POŁUDNIOWY WSCHÓD"
+abbrev_southeast: ; "IDŹ NA POŁUDNIOWY WSCHÓD"
     dta c'ID', PL_Z_AC, c' NA PO', PL_L, c'UDNIOWY WSCH', PL_O, c'D', $00
-abbrev_exp_4: ; "IDŹ NA POŁUDNIE"
+abbrev_south: ; "IDŹ NA POŁUDNIE"
     dta c'ID', PL_Z_AC, c' NA PO', PL_L, c'UDNIE', $00
-abbrev_exp_5: ; "IDŹ NA POŁUDNIOWY ZACHÓD"
+abbrev_southwest: ; "IDŹ NA POŁUDNIOWY ZACHÓD"
     dta c'ID', PL_Z_AC, c' NA PO', PL_L, c'UDNIOWY ZACH', PL_O, c'D', $00
-abbrev_exp_6: ; "IDŹ NA ZACHÓD"
+abbrev_west: ; "IDŹ NA ZACHÓD"
     dta c'ID', PL_Z_AC, c' NA ZACH', PL_O, c'D', $00
-abbrev_exp_7: ; "IDŹ NA PÓŁNOCNY ZACHÓD"
+abbrev_northwest: ; "IDŹ NA PÓŁNOCNY ZACHÓD"
     dta c'ID', PL_Z_AC, c' NA P', PL_O, PL_L, c'NOCNY ZACH', PL_O, c'D'
     dta $00
-abbrev_exp_8: ; "IDŹ W GÓRĘ"
+abbrev_up: ; "IDŹ W GÓRĘ"
     dta c'ID', PL_Z_AC, c' W G', PL_O, c'R', PL_E, $00
-abbrev_exp_9: ; "IDŹ W DÓŁ"
+abbrev_down: ; "IDŹ W DÓŁ"
     dta c'ID', PL_Z_AC, c' W D', PL_O, PL_L, $00
-abbrev_exp_10: ; "CZEKAJ"
+abbrev_wait: ; "CZEKAJ"
     dta c'CZEKAJ', $00
 
 abbrev_ptr_table:
-    dta a(abbrev_exp_0)
-    dta a(abbrev_exp_1)
-    dta a(abbrev_exp_2)
-    dta a(abbrev_exp_3)
-    dta a(abbrev_exp_4)
-    dta a(abbrev_exp_5)
-    dta a(abbrev_exp_6)
-    dta a(abbrev_exp_7)
-    dta a(abbrev_exp_8)
-    dta a(abbrev_exp_9)
-    dta a(abbrev_exp_10)
+    dta a(abbrev_north)
+    dta a(abbrev_northeast)
+    dta a(abbrev_east)
+    dta a(abbrev_southeast)
+    dta a(abbrev_south)
+    dta a(abbrev_southwest)
+    dta a(abbrev_west)
+    dta a(abbrev_northwest)
+    dta a(abbrev_up)
+    dta a(abbrev_down)
+    dta a(abbrev_wait)
 
 abbrev_str_table:
     dta c'PN', $00
@@ -520,127 +520,127 @@ str_sentence_too_long: ; "ZDANIE ZBYT DŁUGIE."
 str_word_too_long: ; "NIE ROZUMIEM"
     dta C_BLU, c'NIE ROZUMIEM', $00
 
-msg_1770: ; "NIE ROZUMIEM SLOWA ""
+msg_unknown_word: ; "NIE ROZUMIEM SLOWA ""
     dta C_BLU, c'NIE ROZUMIEM SLOWA "', $00
 
-msg_1786: ; ""\n"
+msg_quote_newline: ; ""\n"
     dta c'"', CR, $00
 
 err_msg_ptr_table:
-    dta a(msg_1791)
-    dta a(msg_17b2)
-    dta a(msg_17cf)
-    dta a(msg_17d7)
+    dta a(msg_dont_understand_mean)
+    dta a(msg_be_clearer)
+    dta a(msg_what)
+    dta a(msg_dont_understand)
 
-msg_1791: ; "NIE BARDZO ROZUMIEM O CO CHODZI"
+msg_dont_understand_mean: ; "NIE BARDZO ROZUMIEM O CO CHODZI"
     dta C_BLU, c'NIE BARDZO ROZUMIEM O CO CHODZI', $00
 
-msg_17b2: ; "SPRÓBUJ WYRAŻAĆ SIĘ JAŚNIEJ"
+msg_be_clearer: ; "SPRÓBUJ WYRAŻAĆ SIĘ JAŚNIEJ"
     dta C_BLU, c'SPR', PL_O, c'BUJ WYRA', PL_Z_DOT, c'A', PL_C, c' SI'
     dta PL_E, c' JA', PL_S, c'NIEJ', $00
 
-msg_17cf: ; "ŻE CO?"
+msg_what: ; "ŻE CO?"
     dta C_BLU, PL_Z_DOT, c'E CO?', $00
 
-msg_17d7: ; "O CO CHODZI, NIE ROZUMIEM"
+msg_dont_understand: ; "O CO CHODZI, NIE ROZUMIEM"
     dta C_BLU, c'O CO CHODZI, NIE ROZUMIEM', $00
 
 str_sentence_too_complex: ; "ZDANIE ZBYT SKOMPLIKOWANE."
     dta C_BLU, c'ZDANIE ZBYT SKOMPLIKOWANE.', $00
 
-msg_180e: ; "SPRECYZUJ"
+msg_do_precise: ; "SPRECYZUJ"
     dta C_BLU, c'SPRECYZUJ ', $00
 
-msg_181a: ; "NIE WIDZISZ"
+msg_you_dont_see: ; "NIE WIDZISZ"
     dta C_BLU, c'NIE WIDZISZ ', $00
 
-msg_1828: ; "NIE WIDZĘ"
+msg_i_dont_see: ; "NIE WIDZĘ"
     dta C_BLU, c'NIE WIDZ', PL_E, c' ', $00
 
-msg_1834: ; "NIE MOGĘ"
+msg_i_cannot: ; "NIE MOGĘ"
     dta C_BLU, c'NIE MOG', PL_E, c' ', $00
 
-msg_183f: ; "NIE MOŻESZ"
+msg_you_cannot: ; "NIE MOŻESZ"
     dta C_BLU, c'NIE MO', PL_Z_DOT, c'ESZ ', $00
 
-msg_184c: ; "TU NIE MA PRZEJŚCIA"
+msg_no_passage: ; "TU NIE MA PRZEJŚCIA"
     dta C_BLU, c'TU NIE MA PRZEJ', PL_S, c'CIA', $00
 
-msg_1861: ; "NA PEWNO CHCESZ SKOŃCZYĆ GRĘ?\nNACIŚNIJ "T" LUB "N""
+msg_confirm_quit: ; "NA PEWNO CHCESZ SKOŃCZYĆ GRĘ?\nNACIŚNIJ "T" LUB "N""
     dta C_CYN, c'NA PEWNO CHCESZ SKO', PL_N, c'CZY', PL_C, c' GR', PL_E
     dta c'?', CR
     dta c'NACI', PL_S, c'NIJ "T" LUB "N"', $00
 
-msg_1895: ; "\nWCHODZI"
+msg_enters: ; "\nWCHODZI"
     dta CR, C_CYN, c'WCHODZI ', $00
 
-msg_18a0: ; "\nZNAJDUJESZ SIĘ"
+msg_you_are_in: ; "\nZNAJDUJESZ SIĘ"
     dta CR, $9b, c'ZNAJDUJESZ SI', PL_E, c' ', $00
 
-msg_18b2: ; "ZOBACZ, WILL, WESZŁO ŚNIADANIE!\n"
+msg_trolls_breakfast: ; "ZOBACZ, WILL, WESZŁO ŚNIADANIE!\n"
     dta C_CYN, c'ZOBACZ, WILL, WESZ', PL_L, c'O ', PL_S, c'NIADANIE!', CR
     dta $00
 
-msg_18d4: ; "COŚ TY, ON JEST ZA MAŁY, NIE NAJEMY SIĘ\n"
+msg_trolls_too_small: ; "COŚ TY, ON JEST ZA MAŁY, NIE NAJEMY SIĘ\n"
     dta C_CYN, c'CO', PL_S, c' TY, ON JEST ZA MA', PL_L
     dta c'Y, NIE NAJEMY SI', PL_E, CR
     dta $00
 
-msg_18fe: ; "\nTROLLE DOCHODZĄ DO WNIOSKU, ŻE NA\nŚNIADANIE JESTEŚ JEDNAK WYS"
+msg_trolls_eat_you: ; "\nTROLLE DOCHODZĄ DO WNIOSKU, ŻE NA\nŚNIADANIE JESTEŚ JEDNAK WYS"
     dta CR, C_CYN, c'TROLLE DOCHODZ', PL_A, c' DO WNIOSKU, ', PL_Z_DOT
     dta c'E NA', CR
     dta PL_S, c'NIADANIE JESTE', PL_S, c' JEDNAK WYSTARCZAJ', PL_A, c'CO'
     dta CR
     dta c'T', PL_L, c'USTY...', CR, $00
 
-msg_1953: ; "\nWSTAJE DZIEŃ...\n"
+msg_dawn_breaks: ; "\nWSTAJE DZIEŃ...\n"
     dta CR, C_CYN, c'WSTAJE DZIE', PL_N, c'...', CR, $00
 
-msg_1966: ; "\nNAGLE POJAWIAJĄ SIĘ GOBLINY\nMIMO PRÓB UCIECZKI DOSTAJESZ SIĘ "
+msg_goblins_capture: ; "\nNAGLE POJAWIAJĄ SIĘ GOBLINY\nMIMO PRÓB UCIECZKI DOSTAJESZ SIĘ "
     dta CR, C_CYN, c'NAGLE POJAWIAJ', PL_A, c' SI', PL_E, c' GOBLINY', CR
     dta c'MIMO PR', PL_O, c'B UCIECZKI DOSTAJESZ SI', PL_E, c' DO', CR
     dta c'NIEWOLI', CR, $00
 
-msg_19b1: ; "IDZIE NA"
+msg_goes_to: ; "IDZIE NA"
     dta c'IDZIE NA ', $00
 
-msg_19bb: ; "\nNIESTETY NIE UMIESZ PŁYWAĆ"
+msg_cannot_swim: ; "\nNIESTETY NIE UMIESZ PŁYWAĆ"
     dta C_CYN, CR, c'NIESTETY NIE UMIESZ P', PL_L, c'YWA', PL_C, $00
 
-msg_19d8: ; "\nWYJŚCIA:\n"
+msg_exits_header: ; "\nWYJŚCIA:\n"
     dta CR, C_CYN, c'WYJ', PL_S, c'CIA:', C_WHT, CR, $00
 
-msg_19e5: ; "WIDZISZ:\n"
+msg_you_see_header: ; "WIDZISZ:\n"
     dta C_CYN
-msg_19e6:
+msg_you_see_colon:
     dta c'WIDZISZ:', CR, $00
 
-msg_19f0: ; "WIDZISZ"
+msg_you_see: ; "WIDZISZ"
     dta C_CYN, c'WIDZISZ ', $00
 
-msg_19fa: ; "WIDZĘ"
+msg_i_see: ; "WIDZĘ"
     dta C_CYN, c'WIDZ', PL_E, c' ', $00
 
-msg_1a02: ; "\nKTOŚ"
+msg_someone: ; "\nKTOŚ"
     dta CR, C_CYN, c'KTO', PL_S, c' ', $00
 
-msg_1a0a: ; "\nMASZ:"
+msg_you_have: ; "\nMASZ:"
     dta CR, C_CYN, c'MASZ:', $00
 
-msg_1a12: ; "NIE DA SIĘ ROZMAWIAĆ Z"
+msg_cannot_talk_to: ; "NIE DA SIĘ ROZMAWIAĆ Z"
     dta C_YEL, c'NIE DA SI', PL_E, c' ROZMAWIA', PL_C, c' Z ', $00
 
-msg_1a2b: ; "SĄ"
+msg_are: ; "SĄ"
     dta c'S', PL_A, c' ', $00
 
-msg_1a2f: ; "JEST"
+msg_is: ; "JEST"
     dta c'JEST ', $00
 
-msg_1a35: ; "SZUKAJ NA POŁUDNIE OD DOLINY MGIEŁ\n"
+msg_search_south: ; "SZUKAJ NA POŁUDNIE OD DOLINY MGIEŁ\n"
     dta C_CYN, c'SZUKAJ NA PO', PL_L, c'UDNIE OD DOLINY MGIE', PL_L, CR
     dta $00
 
-msg_1a5a: ; "\nELROND MÓWI :\n WEŹ PROWIANT NA DROGĘ, W TAK DŁUGIEJ\nPODRÓŻY "
+msg_elrond_advice: ; "\nELROND MÓWI :\n WEŹ PROWIANT NA DROGĘ, W TAK DŁUGIEJ\nPODRÓŻY "
     dta CR, C_CYN, c'ELROND M', PL_O, c'WI :', CR
     dta c' ', C_YEL, c'WE', PL_Z_AC, c' PROWIANT NA DROG', PL_E
     dta c', W TAK D', PL_L, c'UGIEJ', CR
@@ -649,49 +649,49 @@ msg_1a5a: ; "\nELROND MÓWI :\n WEŹ PROWIANT NA DROGĘ, W TAK DŁUGIEJ\nPODRÓ�
     dta C_CYN, c'ELROND DAJE CI ', PL_S, c'NIADANIE', CR
     dta $00
 
-msg_1ace: ; "STAROZYTNEGO PISMA\nKTÓRYM OPISANA JEST MAPA\n"
+msg_ancient_script: ; "STAROZYTNEGO PISMA\nKTÓRYM OPISANA JEST MAPA\n"
     dta c'STAROZYTNEGO PISMA', CR
     dta c'KT', PL_O, c'RYM OPISANA JEST MAPA', CR
     dta $00
 
-msg_1afb: ; "\nPRÓBUJESZ ZABIĆ"
+msg_you_try_to_kill: ; "\nPRÓBUJESZ ZABIĆ"
     dta CR, C_CYN, c'PR', PL_O, c'BUJESZ ZABI', PL_C, c' ', $00
 
-msg_1b0e: ; "\nWALKA JEST ZACIĘTA, ALE JESTEŚ ZBYT\nSŁABY. ZOSTAJESZ POKONANY"
+msg_killed_in_combat: ; "\nWALKA JEST ZACIĘTA, ALE JESTEŚ ZBYT\nSŁABY. ZOSTAJESZ POKONANY"
     dta CR, c'WALKA JEST ZACI', PL_E, c'TA, ALE JESTE', PL_S, c' ZBYT', CR
     dta c'S', PL_L, c'ABY. ZOSTAJESZ POKONANY PRZEZ ', $00
 
-msg_1b54: ; "\nUWAŻAJ, DZIKI WARG ATAKUJE!\n"
+msg_warg_attacks: ; "\nUWAŻAJ, DZIKI WARG ATAKUJE!\n"
     dta CR, C_YEL, c'UWA', PL_Z_DOT, c'AJ, DZIKI WARG ATAKUJE!', CR, $00
 
-msg_1b73: ; "\nNIESTETY, WARG OKAZAŁ SIĘ SILNIEJSZY\n"
+msg_warg_kills_you: ; "\nNIESTETY, WARG OKAZAŁ SIĘ SILNIEJSZY\n"
     dta CR, C_YEL, c'NIESTETY, WARG OKAZA', PL_L, c' SI', PL_E
     dta c' SILNIEJSZY', CR, $00
 
-msg_1b9b: ; "\nUWAŻAJ, PAJĄK ATAKUJE!\n"
+msg_spider_attacks: ; "\nUWAŻAJ, PAJĄK ATAKUJE!\n"
     dta CR, C_YEL, c'UWA', PL_Z_DOT, c'AJ, PAJ', PL_A, c'K ATAKUJE!', CR
     dta $00
 
-msg_1bb5: ; "\nNIESTETY, PAJĄK OKAZAŁ SIĘ SILNIEJSZY\n"
+msg_spider_kills_you: ; "\nNIESTETY, PAJĄK OKAZAŁ SIĘ SILNIEJSZY\n"
     dta CR, C_YEL, c'NIESTETY, PAJ', PL_A, c'K OKAZA', PL_L, c' SI', PL_E
     dta c' SILNIEJSZY', CR
     dta $00
 
-msg_1bde: ; "\nGOLLUM JEST ZDANIA, ŻE PIERŚCIEŃ JEST\nJEGO WŁASNOŚCIĄ I ZABIJ"
+msg_gollum_kills_for_ring: ; "\nGOLLUM JEST ZDANIA, ŻE PIERŚCIEŃ JEST\nJEGO WŁASNOŚCIĄ I ZABIJ"
     dta CR, C_YEL, c'GOLLUM JEST ZDANIA, ', PL_Z_DOT, c'E PIER', PL_S
     dta c'CIE', PL_N, c' JEST', CR
     dta c'JEGO W', PL_L, c'ASNO', PL_S, c'CI', PL_A, c' I ZABIJA CI', PL_E
     dta CR
     dta $00
 
-msg_1c24: ; "\nDOTYCHCZAS CHRONIŁ CIĘ PIERŚCIEŃ DAJĄC CI\nNIEWIDZIALNOŚĆ, ALE"
+msg_ring_slips_off: ; "\nDOTYCHCZAS CHRONIŁ CIĘ PIERŚCIEŃ DAJĄC CI\nNIEWIDZIALNOŚĆ, ALE"
     dta CR, C_CYN, c'DOTYCHCZAS CHRONI', PL_L, c' CI', PL_E, c' PIER'
     dta PL_S, c'CIE', PL_N, c' DAJ', PL_A, c'C CI', CR
     dta c'NIEWIDZIALNO', PL_S, PL_C, c', ALE TERAZ GOLLUM', CR
     dta c'US', PL_L, c'YSZA', PL_L, c' TW', PL_O, c'J G', PL_L
     dta c'OS I WIE, ', PL_Z_DOT, c'E TU JESTE', PL_S, $00
 
-msg_1c98: ; "\nGOLLUM MOWI :\n KTOŚ UKRADŁ MÓJ PIERŚCIEŃ I POSIADŁ MOC\nELFÓW"
+msg_gollum_laments: ; "\nGOLLUM MOWI :\n KTOŚ UKRADŁ MÓJ PIERŚCIEŃ I POSIADŁ MOC\nELFÓW"
     dta CR, C_CYN, c'GOLLUM MOWI :', CR
     dta c' KTO', PL_S, c' UKRAD', PL_L, c' M', PL_O, c'J PIER', PL_S
     dta c'CIE', PL_N, c' I POSIAD', PL_L, c' MOC', CR
@@ -699,52 +699,52 @@ msg_1c98: ; "\nGOLLUM MOWI :\n KTOŚ UKRADŁ MÓJ PIERŚCIEŃ I POSIADŁ MOC\nEL
     dta PL_E, c' GO!', CR
     dta $00
 
-msg_1cf5: ; "\nWARG NIE POZWALA CI ODEJŚĆ\n"
+msg_warg_blocks_way: ; "\nWARG NIE POZWALA CI ODEJŚĆ\n"
     dta CR, C_CYN, c'WARG NIE POZWALA CI ODEJ', PL_S, PL_C, CR, $00
 
-msg_1d13: ; "\nPAJAK NIE POZWALA CI ODEJŚĆ\n"
+msg_spider_blocks_way: ; "\nPAJAK NIE POZWALA CI ODEJŚĆ\n"
     dta CR, C_CYN, c'PAJAK NIE POZWALA CI ODEJ', PL_S, PL_C, CR, $00
 
-msg_1d32: ; "\nPOJAWIA SIĘ KILKUNASTU ELFÓW\nELFY PORYWAJĄ CIĘ\n"
+msg_elves_capture: ; "\nPOJAWIA SIĘ KILKUNASTU ELFÓW\nELFY PORYWAJĄ CIĘ\n"
     dta CR, C_CYN, c'POJAWIA SI', PL_E, c' KILKUNASTU ELF', PL_O, c'W', CR
     dta c'ELFY PORYWAJ', PL_A, c' CI', PL_E, CR
     dta $00
 
-msg_1d64: ; "\nMOC PIERŚCIENIA PORUSZA ŁÓDKĘ\n\n"
+msg_ring_moves_boat: ; "\nMOC PIERŚCIENIA PORUSZA ŁÓDKĘ\n\n"
     dta CR, C_YEL, c'MOC PIER', PL_S, c'CIENIA PORUSZA ', PL_L, PL_O
     dta c'DK', PL_E, CR, CR, $00
 
-msg_1d86: ; "\nCZUJESZ, ŻE BECZKA PORUSZA SIĘ I SPADA\nPRZEZ PEWIEN CZAS CZUJ"
+msg_barrel_river_ride: ; "\nCZUJESZ, ŻE BECZKA PORUSZA SIĘ I SPADA\nPRZEZ PEWIEN CZAS CZUJ"
     dta CR, C_CYN, c'CZUJESZ, ', PL_Z_DOT, c'E BECZKA PORUSZA SI', PL_E
     dta c' I SPADA', CR
     dta c'PRZEZ PEWIEN CZAS CZUJESZ KO', PL_L, c'YSANIE', CR
     dta c'POTEM SILNE UDERZENIE I BECZKA', CR
     dta c'ROZBIJA SI', PL_E, CR, $00
 
-msg_1dff: ; "\nTRATWA RUSZA I PŁYNIE PO FALACH\nDŁUGIEGO JEZIORA\n"
+msg_raft_sails: ; "\nTRATWA RUSZA I PŁYNIE PO FALACH\nDŁUGIEGO JEZIORA\n"
     dta CR, C_CYN, c'TRATWA RUSZA I P', PL_L, c'YNIE PO FALACH', CR
     dta c'D', PL_L, c'UGIEGO JEZIORA', CR
     dta $00
 
-msg_1e33: ; "TRATWA DOBIJA DO BRZEGU. WYSIADASZ\n"
+msg_raft_lands: ; "TRATWA DOBIJA DO BRZEGU. WYSIADASZ\n"
     dta c'TRATWA DOBIJA DO BRZEGU. WYSIADASZ', CR, $00
 
-msg_1e57: ; "\nWIDZISZ JAK STRAŻNIK WYRZUCA BECZKĘ\nZ SIEDZĄCYM W NIEJ THORIN"
+msg_guard_throws_thorin: ; "\nWIDZISZ JAK STRAŻNIK WYRZUCA BECZKĘ\nZ SIEDZĄCYM W NIEJ THORIN"
     dta CR, C_CYN, c'WIDZISZ JAK STRA', PL_Z_DOT, c'NIK WYRZUCA BECZK'
     dta PL_E, CR
     dta c'Z SIEDZ', PL_A, c'CYM W NIEJ THORINEM PRZEZ KLAP', PL_E, CR
     dta $00
 
-msg_1ea6: ; "\nSTRAŻNIK WYRZUCA JEDNĄ Z BECZEK\nPRZEZ KLAPĘ W PODŁODZE\n"
+msg_guard_throws_barrel: ; "\nSTRAŻNIK WYRZUCA JEDNĄ Z BECZEK\nPRZEZ KLAPĘ W PODŁODZE\n"
     dta CR, C_CYN, c'STRA', PL_Z_DOT, c'NIK WYRZUCA JEDN', PL_A
     dta c' Z BECZEK', CR
     dta c'PRZEZ KLAP', PL_E, c' W POD', PL_L, c'ODZE', CR
     dta $00
 
-msg_1ee0: ; "NIE CHCE"
+msg_refuses: ; "NIE CHCE"
     dta C_CYN, c'NIE CHCE ', $00
 
-msg_1eeb: ; "\nTHORIN MÓWI:\nJEST TO TOPÓR WYKUTY W PODZIEMNYM\nMIEŚCIE KHAZA"
+msg_thorin_axe_story: ; "\nTHORIN MÓWI:\nJEST TO TOPÓR WYKUTY W PODZIEMNYM\nMIEŚCIE KHAZA"
     dta CR, C_CYN, c'THORIN M', PL_O, c'WI:', CR, c'JEST TO TOP', PL_O
     dta c'R WYKUTY W PODZIEMNYM', CR
     dta c'MIE', PL_S, c'CIE KHAZAD-DUM. TYLKO MY, WOJOWNICY', CR
@@ -754,7 +754,7 @@ msg_1eeb: ; "\nTHORIN MÓWI:\nJEST TO TOPÓR WYKUTY W PODZIEMNYM\nMIEŚCIE KHAZA
     dta CR, c'THORIN ZABIERA WIELKI TOP', PL_O, c'R', CR
     dta $00
 
-msg_1f9a: ; "\nOKAZUJE SIĘ, ŻE BEORN BARDZO NIE LUBI\nJEŚLI OTWIERA SIĘ JEGO "
+msg_beorn_kills_you: ; "\nOKAZUJE SIĘ, ŻE BEORN BARDZO NIE LUBI\nJEŚLI OTWIERA SIĘ JEGO "
     dta CR, C_CYN, c'OKAZUJE SI', PL_E, c', ', PL_Z_DOT
     dta c'E BEORN BARDZO NIE LUBI', CR
     dta c'JE', PL_S, c'LI OTWIERA SI', PL_E, c' JEGO DRZWI BEZ', CR
@@ -762,39 +762,39 @@ msg_1f9a: ; "\nOKAZUJE SIĘ, ŻE BEORN BARDZO NIE LUBI\nJEŚLI OTWIERA SIĘ JEGO
     dta c'ZABIJANIA NIEPO', PL_Z_DOT, PL_A, c'DANYCH GO', PL_S, c'CI', CR
     dta $00
 
-msg_2025: ; "\nBARD MÓWI :\nPOKAŻĘ CI UKRYTE PRZEJŚCIE.\nCHODŹ ZA MNĄ.\n"
+msg_bard_secret_pass: ; "\nBARD MÓWI :\nPOKAŻĘ CI UKRYTE PRZEJŚCIE.\nCHODŹ ZA MNĄ.\n"
     dta CR, C_CYN, c'BARD M', PL_O, c'WI :', CR, c'POKA', PL_Z_DOT, PL_E
     dta c' CI UKRYTE PRZEJ', PL_S, c'CIE.', CR
     dta c'CHOD', PL_Z_AC, c' ZA MN', PL_A, c'.', CR, $00
 
-msg_205e: ; "\nGANDALF MÓWI :\nNA CO CZEKASZ, SPIESZ SIĘ!\n"
+msg_gandalf_hurry: ; "\nGANDALF MÓWI :\nNA CO CZEKASZ, SPIESZ SIĘ!\n"
     dta CR, C_CYN, c'GANDALF M', PL_O, c'WI :', CR
     dta c'NA CO CZEKASZ, SPIESZ SI', PL_E, c'!', CR
     dta $00
 
-msg_208b: ; "\nOKAZUJE SIĘ, ŻE SMOK NIE LUBI, KIEDY\nKTOŚ DOBIERA SIĘ DO JEGO"
+msg_dragon_kills_you: ; "\nOKAZUJE SIĘ, ŻE SMOK NIE LUBI, KIEDY\nKTOŚ DOBIERA SIĘ DO JEGO"
     dta CR, C_YEL, c'OKAZUJE SI', PL_E, c', ', PL_Z_DOT
     dta c'E SMOK NIE LUBI, KIEDY', CR
     dta c'KTO', PL_S, c' DOBIERA SI', PL_E, c' DO JEGO W', PL_L, c'ASNO'
     dta PL_S, c'CI...', CR
     dta $00
 
-msg_20d9: ; "\nWLATUJE STRASZNY SMOK\n"
+msg_dragon_flies_in: ; "\nWLATUJE STRASZNY SMOK\n"
     dta CR, C_CYN, c'WLATUJE STRASZNY SMOK', CR, $00
 
-msg_20f2: ; "\nSTRASZNY SMOK ODLATUJE\n"
+msg_dragon_flies_away: ; "\nSTRASZNY SMOK ODLATUJE\n"
     dta CR, C_CYN, c'STRASZNY SMOK ODLATUJE', CR, $00
 
-msg_210c: ; "\nNIAM NIAM NIAM...\n"
+msg_yum_yum: ; "\nNIAM NIAM NIAM...\n"
     dta CR, C_CYN, c'NIAM NIAM NIAM...', CR, $00
 
-msg_2121: ; "\nBEORN MÓWI :\n MUSISZ MIEĆ ŻYWNOŚĆ NA DROGĘ\nNIE MAM WIELE ALE"
+msg_beorn_gives_food: ; "\nBEORN MÓWI :\n MUSISZ MIEĆ ŻYWNOŚĆ NA DROGĘ\nNIE MAM WIELE ALE"
     dta CR, C_CYN, c'BEORN M', PL_O, c'WI :', CR, c' MUSISZ MIE', PL_C
     dta c' ', PL_Z_DOT, c'YWNO', PL_S, PL_C, c' NA DROG', PL_E, CR
     dta c'NIE MAM WIELE ALE PODZIEL', PL_E, c' SI', PL_E, CR
     dta c'TYM CO MAM', CR, $00
 
-msg_2179: ; "\nNA WIDOK KLEJNOTU DURINA THORIN TRACI\nGŁOWĘ\nTHORIN MÓWI :\n "
+msg_thorin_gems_speech: ; "\nNA WIDOK KLEJNOTU DURINA THORIN TRACI\nGŁOWĘ\nTHORIN MÓWI :\n "
     dta CR, C_CYN, c'NA WIDOK KLEJNOTU DURINA THORIN TRACI', CR
     dta c'G', PL_L, c'OW', PL_E, CR, c'THORIN M', PL_O, c'WI :', CR
     dta c' KRYSZTA', PL_L, c'OWA KULA KRASNOLUD', PL_O, c'W MUSI', CR
@@ -803,27 +803,27 @@ msg_2179: ; "\nNA WIDOK KLEJNOTU DURINA THORIN TRACI\nGŁOWĘ\nTHORIN MÓWI :\n 
     dta CR, c'...I THORIN ROBI TO CO ZAPOWIEDZIA', PL_L, CR
     dta $00
 
-msg_223d: ; "\nWIDZISZ JAK BARD ZABIJA SMOKA\n"
+msg_bard_kills_dragon: ; "\nWIDZISZ JAK BARD ZABIJA SMOKA\n"
     dta CR, C_YEL, c'WIDZISZ JAK BARD ZABIJA SMOKA', CR, $00
 
-msg_225e: ; "\nDOBIEGA CIĘ RYK KONAJĄCEGO SMOKA\n"
+msg_dying_dragon_roar: ; "\nDOBIEGA CIĘ RYK KONAJĄCEGO SMOKA\n"
     dta CR, C_YEL, c'DOBIEGA CI', PL_E, c' RYK KONAJ', PL_A, c'CEGO SMOKA'
     dta CR, $00
 
-msg_2282: ; "\n ŚWIETNY POMYSŁ! JAK GO TYLKO ZOBACZĘ\n"
+msg_bard_great_idea: ; "\n ŚWIETNY POMYSŁ! JAK GO TYLKO ZOBACZĘ\n"
     dta CR, C_CYN, c' ', PL_S, c'WIETNY POMYS', PL_L
     dta c'! JAK GO TYLKO ZOBACZ', PL_E, CR
     dta $00
 
-msg_22ab: ; "\n JEDNEGO JUŻ ZABIŁEM\n"
+msg_bard_already_killed: ; "\n JEDNEGO JUŻ ZABIŁEM\n"
     dta CR, C_CYN, c' JEDNEGO JU', PL_Z_DOT, c' ZABI', PL_L, c'EM', CR
     dta $00
 
-msg_22c3: ; "\n JUŻ MI TO MÓWIŁEŚ\n"
+msg_bard_already_told: ; "\n JUŻ MI TO MÓWIŁEŚ\n"
     dta CR, C_CYN, c' JU', PL_Z_DOT, c' MI TO M', PL_O, c'WI', PL_L, c'E'
     dta PL_S, CR, $00
 
-msg_22d9: ; "\nTHORIN MÓWI :\n MAM JUŻ DOŚĆ, ODCHODZĘ. ŻEGNAJ\nTHORIN ODCHODZ"
+msg_thorin_leaves: ; "\nTHORIN MÓWI :\n MAM JUŻ DOŚĆ, ODCHODZĘ. ŻEGNAJ\nTHORIN ODCHODZ"
     dta CR, C_CYN, c'THORIN M', PL_O, c'WI :', CR
     dta c' MAM JU', PL_Z_DOT, c' DO', PL_S, PL_C, c', ODCHODZ', PL_E
     dta c'. ', PL_Z_DOT, c'EGNAJ', CR
@@ -835,14 +835,14 @@ str_ok: ; "\nN...WZNOWIENIE ZAPISANEJ GRY:\n\n"
     dta c'...WZNOWIENIE ZAPISANEJ GRY:', CR, CR, $00
 
 hunger_msg_ptr_table:
-    dta a(msg_23b0)
-    dta a(msg_23cb)
-    dta a(msg_23ec)
-    dta a(msg_2404)
-    dta a(msg_2404)
-    dta a(msg_2404)
-    dta a(msg_2418)
-    dta a(msg_242f)
+    dta a(msg_hunger_dying)
+    dta a(msg_hunger_gnawing)
+    dta a(msg_hunger_very)
+    dta a(msg_hunger_want_eat)
+    dta a(msg_hunger_want_eat)
+    dta a(msg_hunger_want_eat)
+    dta a(msg_hunger_snack)
+    dta a(msg_hunger_starting)
 
 str_starved: ; "\nNIESTETY, HOBBIT TO NIE JEST WIELBŁĄD I\nCO JAKIŚ CZAS MUSI CO"
     dta CR, C_CYN, c'NIESTETY, HOBBIT TO NIE JEST WIELB', PL_L, PL_A
@@ -851,27 +851,27 @@ str_starved: ; "\nNIESTETY, HOBBIT TO NIE JEST WIELBŁĄD I\nCO JAKIŚ CZAS MUSI
     dta c', INACZEJ', CR
     dta c'GINIE Z G', PL_L, c'ODU.', CR, $00
 
-msg_23b0: ; "\nPRAWIE UMIERASZ Z GŁODU\n"
+msg_hunger_dying: ; "\nPRAWIE UMIERASZ Z GŁODU\n"
     dta CR, C_YEL, c'PRAWIE UMIERASZ Z G', PL_L, c'ODU', CR, $00
 
-msg_23cb: ; "\nCZUJESZ, ŻE CIĘ SSIE Z GŁODU!\n"
+msg_hunger_gnawing: ; "\nCZUJESZ, ŻE CIĘ SSIE Z GŁODU!\n"
     dta CR, C_YEL, c'CZUJESZ, ', PL_Z_DOT, c'E CI', PL_E, c' SSIE Z G'
     dta PL_L, c'ODU!', CR, $00
 
-msg_23ec: ; "\nJESTEŚ BARDZO GŁODNY\n"
+msg_hunger_very: ; "\nJESTEŚ BARDZO GŁODNY\n"
     dta CR, C_YEL, c'JESTE', PL_S, c' BARDZO G', PL_L, c'ODNY', CR, $00
 
-msg_2404: ; "\nCHCE CI SIĘ JEŚĆ\n"
+msg_hunger_want_eat: ; "\nCHCE CI SIĘ JEŚĆ\n"
     dta CR, C_YEL, c'CHCE CI SI', PL_E, c' JE', PL_S, PL_C, CR, $00
 
-msg_2418: ; "\nCOŚ BY SIĘ ZJADŁO...\n"
+msg_hunger_snack: ; "\nCOŚ BY SIĘ ZJADŁO...\n"
     dta CR, c'CO', PL_S, c' BY SI', PL_E, c' ZJAD', PL_L, c'O...', CR, $00
 
-msg_242f: ; "\nZACZYNA CI SIĘ CHCIEĆ JEŚĆ\n"
+msg_hunger_starting: ; "\nZACZYNA CI SIĘ CHCIEĆ JEŚĆ\n"
     dta CR, c'ZACZYNA CI SI', PL_E, c' CHCIE', PL_C, c' JE', PL_S, PL_C
     dta CR, $00
 
-msg_244c: ; "\n\n      G R A   S K O Ń C Z O N A       \n"
+msg_game_over: ; "\n\n      G R A   S K O Ń C Z O N A       \n"
     dta CR, CR, C_BLU, $b0, $c0, $c0, $c0, $c0, $c0, $c0, $c0, $c0, $c0
     dta $c0, $c0, $c0, $c0, $c0, $c0, $c0, $c0, $c0, $c0, $c0, $c0, $c0, $c0
     dta $c0, $c0, $c0, $c0, $c0, $c0, $c0, $c0, $c0, $c0, $c0, $c0, $c0, $c0
@@ -882,7 +882,7 @@ msg_244c: ; "\n\n      G R A   S K O Ń C Z O N A       \n"
     dta $c0, $c0, $c0, $c0, $c0, $bd, CR
     dta $00
 
-msg_24cb: ; "\n\n  DOKONAŁEŚ WIELKIEGO CZYNU. KLEJNOT    DURINA ZNALAZŁ SIĘ W"
+msg_victory_part_one: ; "\n\n  DOKONAŁEŚ WIELKIEGO CZYNU. KLEJNOT    DURINA ZNALAZŁ SIĘ W"
     dta CR, CR, $b0, $c0, $c0, $c0, $c0, $c0, $c0, $c0, $c0, $c0, $c0, $c0
     dta $c0, $c0, $c0, $c0, $c0, $c0, $c0, $c0, $c0, $c0, $c0, $c0, $c0, $c0
     dta $c0, $c0, $c0, $c0, $c0, $c0, $c0, $c0, $c0, $c0, $c0, $c0, $c0, $ae
@@ -891,7 +891,7 @@ msg_24cb: ; "\n\n  DOKONAŁEŚ WIELKIEGO CZYNU. KLEJNOT    DURINA ZNALAZŁ SIĘ 
     dta c'A', PL_S, c'CIWYCH    ', $dd, $dd, c'  R', PL_E, c'KACH. '
     dta PL_Z_AC, c'NOWU WRACA SPOK', PL_O, c'J, A NA    ', $dd, $00
 
-msg_256e: ; "PAMIĄTKĘ WYPRAWY POZOSTAŁ TYLKO       ZŁOTY PIERŚCIEŃ...        "
+msg_victory_part_two: ; "PAMIĄTKĘ WYPRAWY POZOSTAŁ TYLKO       ZŁOTY PIERŚCIEŃ...        "
     dta $dd, c'  PAMI', PL_A, c'TK', PL_E, c' WYPRAWY POZOSTA', PL_L
     dta c' TYLKO     ', $dd, $dd, c'  Z', PL_L, c'OTY PIER', PL_S, c'CIE'
     dta PL_N, c'...                  ', $dd, $dd, c'      G R A   S K O '
@@ -1002,9 +1002,9 @@ unknown_word_buf:
     dta $ff, $00, $ff
 clause_idx:
     dta $00
-cur_adj1:
+cur_adj_first:
     dta $ff
-cur_adj2:
+cur_adj_second:
     dta $00
 cur_noun:
     dta $ff, $00, $ff, $00, $ff, $00, $ff, $00, $ff, $00, $ff, $00, $ff, $00, $ff, $00
@@ -1014,7 +1014,7 @@ cur_noun:
     dta $44, $44, $44, $52, $52, $52, $52, $52, $52, $43, $52, $52, $4f, $24, $4d, $4e
     dta $36, $3c, $2d, $24, $00, $03, $04, $02, $ff, $03, $01, $06, $06, $02, $01, $01
     dta $01, $03, $05, $07, $01, $21, $07, $22, $01, $23, $01, $20
-cmd_verb_arg1:
+cmd_actor_obj:
     dta $08
 cmd_prep:
     dta $1b
@@ -1047,7 +1047,7 @@ io_dev_num:
 fillable_objs_table:
     dta $15, $34, $35, $00, $40, $40, $40, $4c, $40, $40, $3e, $43, $44, $44, $44, $44
     dta $52, $52, $52, $52, $52, $52, $43, $52, $52, $4f
-dark_rooms_table:
+water_rooms_table:
     dta $24, $4d, $4e, $36, $3c, $2d, $24, $00, $03, $04, $02, $ff, $03, $01, $06, $06
     dta $02, $01, $01, $01, $03, $05, $07, $01
 npc_move_table:
@@ -1070,7 +1070,7 @@ port_save:
 describe_room:
     ldx #$00
 @
-    lda dark_rooms_table,x
+    lda water_rooms_table,x
     beq @+1
     cmp current_room
     bne @+
@@ -1082,55 +1082,55 @@ describe_room:
     lda #$00
     sta print_hdr_flag
     sta temp_dir_idx
-    sta ZP_6B
-    sta ZP_6C
+    sta zp_aux_lo
+    sta zp_aux_hi
     RAMON
     lda $c010
-    sta ZP_69
+    sta zp_ptr_lo
     lda $c011
-    sta ZP_6A
+    sta zp_ptr_hi
     lda current_room
-    sta ZP_6B
-    asl ZP_6B
-    rol ZP_6C
-    asl ZP_6B
-    rol ZP_6C
+    sta zp_aux_lo
+    asl zp_aux_lo
+    rol zp_aux_hi
+    asl zp_aux_lo
+    rol zp_aux_hi
     lda current_room
-    adc ZP_6B
-    sta ZP_6B
-    lda ZP_6C
+    adc zp_aux_lo
+    sta zp_aux_lo
+    lda zp_aux_hi
     adc #$00
-    sta ZP_6C
-    asl ZP_6B
-    rol ZP_6C
-    lda ZP_69
-    adc ZP_6B
-    sta ZP_69
-    lda ZP_6A
-    adc ZP_6C
-    sta ZP_6A
-    lda ZP_69
+    sta zp_aux_hi
+    asl zp_aux_lo
+    rol zp_aux_hi
+    lda zp_ptr_lo
+    adc zp_aux_lo
+    sta zp_ptr_lo
+    lda zp_ptr_hi
+    adc zp_aux_hi
+    sta zp_ptr_hi
+    lda zp_ptr_lo
     sec
     sbc #$0a
-    sta ZP_69
-    lda ZP_6A
+    sta zp_ptr_lo
+    lda zp_ptr_hi
     sbc #$00
-    sta ZP_6A
+    sta zp_ptr_hi
     lda #$00
     sta gram_case
 @
     ldy temp_dir_idx
-    lda (ZP_69),y
+    lda (zp_ptr_lo),y
     beq @+1
-    lda ZP_69
+    lda zp_ptr_lo
     pha
-    lda ZP_6A
+    lda zp_ptr_hi
     pha
     ROMON
     lda print_hdr_flag
     bne @+
-    ldx #<msg_19d8
-    ldy #>msg_19d8
+    ldx #<msg_exits_header
+    ldy #>msg_exits_header
     jsr print_string
     inc print_hdr_flag
 @
@@ -1138,9 +1138,9 @@ describe_room:
     lda #$0d
     CHROUT
     pla
-    sta ZP_6A
+    sta zp_ptr_hi
     pla
-    sta ZP_69
+    sta zp_ptr_lo
     RAMON
 @
     inc temp_dir_idx
@@ -1152,20 +1152,20 @@ describe_room:
 print_direction_name:
     ldx temp_dir_idx
     lda dir_adj_table,x
-    sta cur_adj1
+    sta cur_adj_first
     lda dir_noun_table,x
     sta cur_noun
     lda #$ff
-    sta cur_adj2
+    sta cur_adj_second
     jmp print_inflected_noun
 print_object_name:
     jsr get_object_ptr
     ldy #$00
     jsr read_bank_byte
-    sta cur_adj1
+    sta cur_adj_first
     iny
     jsr read_bank_byte
-    sta cur_adj2
+    sta cur_adj_second
     iny
     jsr read_bank_byte
     sta cur_noun
@@ -1176,36 +1176,36 @@ get_object_ptr:
     pla
     tax
     lda obj_table_ptr
-    sta ZP_69
+    sta zp_ptr_lo
     lda $0d07
-    sta ZP_6A
+    sta zp_ptr_hi
 @
     dex
     beq @+
     clc
-    lda ZP_69
+    lda zp_ptr_lo
     adc #$08
-    sta ZP_69
-    lda ZP_6A
+    sta zp_ptr_lo
+    lda zp_ptr_hi
     adc #$00
-    sta ZP_6A
+    sta zp_ptr_hi
     jmp @-
 @
     ROMON
     rts
-sub_2ead:
+print_you_see_header:
     lda print_hdr_flag
     bne @+
     inc print_hdr_flag
-    ldx #<msg_19e5
-    ldy #>msg_19e5
+    ldx #<msg_you_see_header
+    ldy #>msg_you_see_header
     jsr print_string
 @
     rts
 list_room_objects:
     ldx #$00
 @
-    lda dark_rooms_table,x
+    lda water_rooms_table,x
     beq @+1
     cmp current_room
     bne @+
@@ -1242,15 +1242,15 @@ list_room_objects:
     cmp current_room
     bne @+1
 @
-    jsr sub_2ead
+    jsr print_you_see_header
     lda temp_obj_idx
-    jsr sub_2f1d
+    jsr describe_object_and_contents
     lda #$0d
     CHROUT
 @
     inc temp_obj_idx
     jmp @-3
-sub_2f1d:
+describe_object_and_contents:
     sta $2d0c
     jsr get_object_ptr
     ldy #$06
@@ -1258,11 +1258,11 @@ sub_2f1d:
     sta $2d0e
     lda $2d0c
     jsr print_object_name
-    jsr sub_2fac
+    jsr print_door_direction
     lda $2d0e
     pha
     lda $2d0c
-    jsr sub_3006
+    jsr print_open_closed_state
     pla
     sta $2d0e
     and #$54
@@ -1305,7 +1305,7 @@ sub_2f1d:
     jsr read_bank_byte
     cmp $2d0c
     bne @+
-    jsr sub_305a
+    jsr print_container_header
     lda #$20
     CHROUT
     lda #$20
@@ -1315,7 +1315,7 @@ sub_2f1d:
 @
     inc $2d0b
     jmp @-2
-sub_2fac:
+print_door_direction:
     lda temp_obj_idx
     jsr get_object_ptr
     ldy #$05
@@ -1350,14 +1350,14 @@ sub_2fac:
     sta $2c73
     lda #$00
     sta $2cb9
-    jsr sub_3418
+    jsr print_preposition
     lda #$05
     sta gram_case
     jsr print_direction_name
     lda #$03
     sta gram_case
     rts
-sub_3006:
+print_open_closed_state:
     sta $2d0c
     jsr get_object_ptr
     ldy #$06
@@ -1378,13 +1378,13 @@ sub_3006:
     lda $2c77
     cmp #$04
     bcc @+
-    ldx #<msg_1a2b
-    ldy #>msg_1a2b
+    ldx #<msg_are
+    ldy #>msg_are
     jsr print_string
     jmp @+1
 @
-    ldx #<msg_1a2f
-    ldy #>msg_1a2f
+    ldx #<msg_is
+    ldy #>msg_is
     jsr print_string
 @
     pla
@@ -1395,11 +1395,11 @@ sub_3006:
 @
     lda #$03
     sta $2c73
-    jsr sub_31b4
+    jsr print_adjective_by_id
     lda #$03
     sta gram_case
     rts
-sub_305a:
+print_container_header:
     lda $2d0d
     beq @+
     lda #$0d
@@ -1423,8 +1423,8 @@ sub_305a:
     jsr print_object_name
     lda #$03
     sta gram_case
-    ldx #<msg_19e6
-    ldy #>msg_19e6
+    ldx #<msg_you_see_colon
+    ldy #>msg_you_see_colon
     jsr print_string
     rts
 @
@@ -1440,30 +1440,30 @@ sub_305a:
     rts
 str_ma:
     dta c'MA:', CR, $00
-L30B7:
+print_noun_by_id:
     RAMON
     lda $c000
-    sta ZP_69
+    sta zp_ptr_lo
     lda $c001
-    sta ZP_6A
+    sta zp_ptr_hi
     ldx $2c73
 @
     cpx #$00
     beq @+1
     ldy #$00
 @
-    lda (ZP_69),y
-    INCPTR ZP_69
+    lda (zp_ptr_lo),y
+    INCPTR zp_ptr_lo
     cmp #$3a
     bne @-
-    INCPTR ZP_69
-    INCPTR ZP_69
+    INCPTR zp_ptr_lo
+    INCPTR zp_ptr_lo
     dex
     bne @-1
 @
     ldy #$00
 @
-    lda (ZP_69),y
+    lda (zp_ptr_lo),y
     cmp #$3a
     beq @+
     iny
@@ -1471,27 +1471,27 @@ L30B7:
 @
     sty $2c76
     iny
-    lda (ZP_69),y
+    lda (zp_ptr_lo),y
     sta $2c75
     iny
-    lda (ZP_69),y
+    lda (zp_ptr_lo),y
     sta $2c77
-    lda ZP_69
-    sta ZP_6B
-    lda ZP_6A
-    sta ZP_6C
+    lda zp_ptr_lo
+    sta zp_aux_lo
+    lda zp_ptr_hi
+    sta zp_aux_hi
     lda $c002
-    sta ZP_69
+    sta zp_ptr_lo
     lda $c003
-    sta ZP_6A
+    sta zp_ptr_hi
     ldx $2c75
     dex
     cpx #$00
     beq @+1
 @
     ldy #$00
-    lda (ZP_69),y
-    INCPTR ZP_69
+    lda (zp_ptr_lo),y
+    INCPTR zp_ptr_lo
     cmp #$00
     bne @-
     dex
@@ -1502,15 +1502,15 @@ L30B7:
     cpx #$00
     beq @+1
 @
-    lda (ZP_69),y
-    INCPTR ZP_69
+    lda (zp_ptr_lo),y
+    INCPTR zp_ptr_lo
     cmp #$2d
     bne @-
     dex
     bne @-
     ldy #$00
 @
-    lda (ZP_69),y
+    lda (zp_ptr_lo),y
     cmp #$2d
     beq @+
     iny
@@ -1520,15 +1520,15 @@ L30B7:
     clc
     adc $2c76
     sta $2c76
-    lda ZP_69
+    lda zp_ptr_lo
     pha
-    lda ZP_6A
+    lda zp_ptr_hi
     pha
     ROMON
-    lda ZP_6B
-    sta ZP_69
-    lda ZP_6C
-    sta ZP_6A
+    lda zp_aux_lo
+    sta zp_ptr_lo
+    lda zp_aux_hi
+    sta zp_ptr_hi
     sec
     GETCOL
     tya
@@ -1549,9 +1549,9 @@ L30B7:
     bne @-
 @
     pla
-    sta ZP_6A
+    sta zp_ptr_hi
     pla
-    sta ZP_69
+    sta zp_ptr_lo
     ldy #$00
 @
     jsr read_bank_byte
@@ -1564,29 +1564,29 @@ L30B7:
     lda #$20
     CHROUT
     rts
-sub_31b4:
+print_adjective_by_id:
     RAMON
     lda $c004
-    sta ZP_69
+    sta zp_ptr_lo
     lda $c005
-    sta ZP_6A
+    sta zp_ptr_hi
     ldx $2c73
 @
     cpx #$00
     beq @+1
     ldy #$00
 @
-    lda (ZP_69),y
-    INCPTR ZP_69
+    lda (zp_ptr_lo),y
+    INCPTR zp_ptr_lo
     cmp #$3a
     bne @-
-    INCPTR ZP_69
+    INCPTR zp_ptr_lo
     dex
     bne @-1
 @
     ldy #$00
 @
-    lda (ZP_69),y
+    lda (zp_ptr_lo),y
     cmp #$3a
     beq @+
     iny
@@ -1594,24 +1594,24 @@ sub_31b4:
 @
     sty $2c76
     iny
-    lda (ZP_69),y
+    lda (zp_ptr_lo),y
     sta $2c75
-    lda ZP_69
-    sta ZP_6B
-    lda ZP_6A
-    sta ZP_6C
+    lda zp_ptr_lo
+    sta zp_aux_lo
+    lda zp_ptr_hi
+    sta zp_aux_hi
     lda $c006
-    sta ZP_69
+    sta zp_ptr_lo
     lda $c007
-    sta ZP_6A
+    sta zp_ptr_hi
     ldx $2c75
     dex
     cpx #$00
     beq @+1
 @
     ldy #$00
-    lda (ZP_69),y
-    INCPTR ZP_69
+    lda (zp_ptr_lo),y
+    INCPTR zp_ptr_lo
     cmp #$00
     bne @-
     dex
@@ -1630,15 +1630,15 @@ sub_31b4:
     beq @+1
     ldy #$00
 @
-    lda (ZP_69),y
-    INCPTR ZP_69
+    lda (zp_ptr_lo),y
+    INCPTR zp_ptr_lo
     cmp #$2d
     bne @-
     dex
     bne @-
     ldy #$00
 @
-    lda (ZP_69),y
+    lda (zp_ptr_lo),y
     cmp #$2d
     beq @+
     iny
@@ -1648,15 +1648,15 @@ sub_31b4:
     clc
     adc $2c76
     sta $2c76
-    lda ZP_69
+    lda zp_ptr_lo
     pha
-    lda ZP_6A
+    lda zp_ptr_hi
     pha
     ROMON
-    lda ZP_6B
-    sta ZP_69
-    lda ZP_6C
-    sta ZP_6A
+    lda zp_aux_lo
+    sta zp_ptr_lo
+    lda zp_aux_hi
+    sta zp_ptr_hi
     sec
     GETCOL
     tya
@@ -1677,9 +1677,9 @@ sub_31b4:
     bne @-
 @
     pla
-    sta ZP_6A
+    sta zp_ptr_hi
     pla
-    sta ZP_69
+    sta zp_ptr_lo
     ldy #$00
 @
     jsr read_bank_byte
@@ -1692,30 +1692,30 @@ sub_31b4:
     lda #$20
     CHROUT
     rts
-sub_32b0:
+get_noun_gender:
     RAMON
     lda $c000
-    sta ZP_69
+    sta zp_ptr_lo
     lda $c001
-    sta ZP_6A
+    sta zp_ptr_hi
     ldx $2c73
 @
     cpx #$00
     beq @+1
     ldy #$00
 @
-    lda (ZP_69),y
-    INCPTR ZP_69
+    lda (zp_ptr_lo),y
+    INCPTR zp_ptr_lo
     cmp #$3a
     bne @-
-    INCPTR ZP_69
-    INCPTR ZP_69
+    INCPTR zp_ptr_lo
+    INCPTR zp_ptr_lo
     dex
     bne @-1
 @
     ldy #$00
 @
-    lda (ZP_69),y
+    lda (zp_ptr_lo),y
     cmp #$3a
     beq @+
     iny
@@ -1723,7 +1723,7 @@ sub_32b0:
 @
     iny
     iny
-    lda (ZP_69),y
+    lda (zp_ptr_lo),y
     sta $2c77
     ROMON
     rts
@@ -1734,10 +1734,10 @@ lookup_word:
     asl @
     asl @
     adc #$60
-    sta ZP_69
+    sta zp_ptr_lo
     lda #$15
     adc #$00
-    sta ZP_6A
+    sta zp_ptr_hi
     ldy #$11
     lda #$00
 @
@@ -1745,7 +1745,7 @@ lookup_word:
     dey
     bne @-
 @
-    lda (ZP_69),y
+    lda (zp_ptr_lo),y
     beq @+
     sta unknown_word_buf,y
     iny
@@ -1753,24 +1753,24 @@ lookup_word:
     bne @-
 @
     rts
-sub_332c:
+match_verb:
     RAMON
     lda $c008
-    sta ZP_69
+    sta zp_ptr_lo
     lda $c009
-    sta ZP_6A
+    sta zp_ptr_hi
     lda #$ff
     sta $2c73
 @
     ldy #$00
     inc $2c73
-    lda (ZP_69),y
+    lda (zp_ptr_lo),y
     bne @+
     ROMON
     lda #$ff
     rts
 @
-    lda (ZP_69),y
+    lda (zp_ptr_lo),y
     cmp unknown_word_buf,y
     bne @+2
     iny
@@ -1781,7 +1781,7 @@ sub_332c:
     jmp @+1
 @
     iny
-    lda (ZP_69),y
+    lda (zp_ptr_lo),y
     pha
     ROMON
     lda #$03
@@ -1794,30 +1794,30 @@ sub_332c:
     beq @-2
     ldy #$00
 @
-    lda (ZP_69),y
-    INCPTR ZP_69
+    lda (zp_ptr_lo),y
+    INCPTR zp_ptr_lo
     cmp #$3a
     bne @-
-    INCPTR ZP_69
+    INCPTR zp_ptr_lo
     jmp @-5
-sub_339a:
+match_preposition:
     RAMON
     lda $c00c
-    sta ZP_69
+    sta zp_ptr_lo
     lda $c00d
-    sta ZP_6A
+    sta zp_ptr_hi
     lda #$ff
     sta $2c73
 @
     ldy #$00
     inc $2c73
-    lda (ZP_69),y
+    lda (zp_ptr_lo),y
     bne @+
     ROMON
     lda #$ff
     rts
 @
-    lda (ZP_69),y
+    lda (zp_ptr_lo),y
     cmp unknown_word_buf,y
     bne @+2
     iny
@@ -1826,10 +1826,10 @@ sub_339a:
     lda unknown_word_buf,y
     bne @+1
     iny
-    lda (ZP_69),y
+    lda (zp_ptr_lo),y
     sta $14fd
     iny
-    lda (ZP_69),y
+    lda (zp_ptr_lo),y
     sta $14fe
     ROMON
     lda #$04
@@ -1844,44 +1844,44 @@ sub_339a:
     beq @-2
     ldy #$00
 @
-    lda (ZP_69),y
-    INCPTR ZP_69
+    lda (zp_ptr_lo),y
+    INCPTR zp_ptr_lo
     cmp #$3a
     bne @-
-    INCPTR ZP_69
-    INCPTR ZP_69
+    INCPTR zp_ptr_lo
+    INCPTR zp_ptr_lo
     jmp @-5
-sub_3418:
+print_preposition:
     RAMON
     lda $c00c
-    sta ZP_69
+    sta zp_ptr_lo
     lda $c00d
-    sta ZP_6A
+    sta zp_ptr_hi
 @
     ldy #$00
-    lda (ZP_69),y
+    lda (zp_ptr_lo),y
     bne @+
     ROMON
     rts
 @
     ldy #$00
 @
-    lda (ZP_69),y
+    lda (zp_ptr_lo),y
     iny
     cmp #$3a
     bne @-
-    lda (ZP_69),y
+    lda (zp_ptr_lo),y
     iny
     cmp $2c73
     bne @+2
-    lda (ZP_69),y
+    lda (zp_ptr_lo),y
     cmp $2cb9
     bne @+2
     dey
     dey
     sty $2c76
     ROMON
-    jsr sub_34f7
+    jsr wrap_line_if_needed
     ldy #$00
 @
     jsr read_bank_byte
@@ -1896,45 +1896,45 @@ sub_3418:
 @
     tya
     sec
-    adc ZP_69
-    sta ZP_69
-    lda ZP_6A
+    adc zp_ptr_lo
+    sta zp_ptr_lo
+    lda zp_ptr_hi
     adc #$00
-    sta ZP_6A
+    sta zp_ptr_hi
     jmp @-5
-sub_3482:
+print_verb_form:
     RAMON
     lda $c00a
-    sta ZP_69
+    sta zp_ptr_lo
     lda $c00b
-    sta ZP_6A
+    sta zp_ptr_hi
     lda $2c73
-    sta ZP_6B
+    sta zp_aux_lo
     ldy #$00
-    lda ZP_6B
+    lda zp_aux_lo
     beq @+1
 @
     ldy #$00
-    lda (ZP_69),y
-    INCPTR ZP_69
+    lda (zp_ptr_lo),y
+    INCPTR zp_ptr_lo
     cmp #$00
     bne @-
-    dec ZP_6B
+    dec zp_aux_lo
     bne @-
 @
     lda $2c8b
-    sta ZP_6B
-    lda ZP_6B
+    sta zp_aux_lo
+    lda zp_aux_lo
     beq @+1
 @
-    lda (ZP_69),y
-    INCPTR ZP_69
+    lda (zp_ptr_lo),y
+    INCPTR zp_ptr_lo
     cmp #$2d
     bne @-
-    dec ZP_6B
+    dec zp_aux_lo
     bne @-
 @
-    lda (ZP_69),y
+    lda (zp_ptr_lo),y
     cmp #$2d
     beq @+
     iny
@@ -1942,7 +1942,7 @@ sub_3482:
 @
     sty $2c76
     ROMON
-    jsr sub_34f7
+    jsr wrap_line_if_needed
     ldy #$00
 @
     jsr read_bank_byte
@@ -1954,7 +1954,7 @@ sub_3482:
 @
     lda #$20
     CHROUT_JMP
-sub_34f7:
+wrap_line_if_needed:
     sec
     GETCOL
     txa
@@ -1965,24 +1965,24 @@ sub_34f7:
 @
     lda #$0d
     CHROUT_JMP
-sub_3509:
+match_noun:
     RAMON
     lda $c000
-    sta ZP_69
+    sta zp_ptr_lo
     lda $c001
-    sta ZP_6A
+    sta zp_ptr_hi
     lda #$ff
     sta $2c73
 @
     ldy #$00
     inc $2c73
-    lda (ZP_69),y
+    lda (zp_ptr_lo),y
     bne @+
     ROMON
     lda #$ff
     rts
 @
-    lda (ZP_69),y
+    lda (zp_ptr_lo),y
     cmp #$3a
     beq @+1
     cmp unknown_word_buf,y
@@ -1991,41 +1991,41 @@ sub_3509:
     bne @-
 @
     ldy #$00
-    lda (ZP_69),y
-    INCPTR ZP_69
+    lda (zp_ptr_lo),y
+    INCPTR zp_ptr_lo
     cmp #$3a
     bne @-
-    INCPTR ZP_69
-    INCPTR ZP_69
+    INCPTR zp_ptr_lo
+    INCPTR zp_ptr_lo
     jmp @-2
 @
-    sty ZP_6B
+    sty zp_aux_lo
     lda #$00
-    sta ZP_6C
+    sta zp_aux_hi
     sta gram_case
     iny
-    lda (ZP_69),y
+    lda (zp_ptr_lo),y
     sta $2c75
     lda $c002
-    sta ZP_61
+    sta zp_str_lo
     lda $c003
-    sta ZP_62
+    sta zp_str_hi
     ldy #$00
     ldx $2c75
 @
     dex
     beq @+1
 @
-    lda (ZP_61),y
-    INCPTR ZP_61
+    lda (zp_str_lo),y
+    INCPTR zp_str_lo
     cmp #$00
     bne @-
     jmp @-1
 @
-    ldx ZP_6B
+    ldx zp_aux_lo
     ldy #$00
 @
-    lda (ZP_61),y
+    lda (zp_str_lo),y
     cmp #$2d
     beq @+
     cmp unknown_word_buf,x
@@ -2038,8 +2038,8 @@ sub_3509:
     bne @+
     ldx gram_case
     lda bit_mask_table,x
-    ora ZP_6C
-    sta ZP_6C
+    ora zp_aux_hi
+    sta zp_aux_hi
 @
     inc gram_case
     lda gram_case
@@ -2047,14 +2047,14 @@ sub_3509:
     beq @+1
     ldy #$00
 @
-    lda (ZP_61),y
-    INCPTR ZP_61
+    lda (zp_str_lo),y
+    INCPTR zp_str_lo
     cmp #$2d
     bne @-
     jmp @-4
 @
     ROMON
-    ldx ZP_6C
+    ldx zp_aux_hi
     cpx #$00
     bne @+
     RAMON
@@ -2062,60 +2062,60 @@ sub_3509:
 @
     lda #$01
     sta word_match_buf
-    lda ZP_6C
+    lda zp_aux_hi
     sta $14fe
     lda $2c73
     sta $14fd
     rts
-sub_35fc:
+match_adjective:
     RAMON
     lda $c004
-    sta ZP_69
+    sta zp_ptr_lo
     lda $c005
-    sta ZP_6A
+    sta zp_ptr_hi
     lda #$ff
     sta $2c73
 @
     ldy #$00
     inc $2c73
-    lda (ZP_69),y
+    lda (zp_ptr_lo),y
     bne @+
     ROMON
     lda #$ff
     rts
 @
-    lda (ZP_69),y
+    lda (zp_ptr_lo),y
     cmp #$3a
     beq @+
     cmp unknown_word_buf,y
-    bne L3635
+    bne skip_to_next_adj
     iny
     bne @-
-L3635:
+skip_to_next_adj:
     ldy #$00
-    lda (ZP_69),y
-    INCPTR ZP_69
+    lda (zp_ptr_lo),y
+    INCPTR zp_ptr_lo
     cmp #$3a
-    bne L3635
-    INCPTR ZP_69
+    bne skip_to_next_adj
+    INCPTR zp_ptr_lo
     jmp @-1
 @
-    sty ZP_6B
+    sty zp_aux_lo
     iny
-    lda (ZP_69),y
+    lda (zp_ptr_lo),y
     sta $2c75
     lda $c006
-    sta ZP_61
+    sta zp_str_lo
     lda $c007
-    sta ZP_62
+    sta zp_str_hi
     ldy #$00
     ldx $2c75
 @
     dex
     beq @+1
 @
-    lda (ZP_61),y
-    INCPTR ZP_61
+    lda (zp_str_lo),y
+    INCPTR zp_str_lo
     cmp #$00
     bne @-
     jmp @-1
@@ -2125,12 +2125,12 @@ L3635:
 @
     lda #$00
     sta gram_case
-    sta ZP_6C
+    sta zp_aux_hi
 @
-    ldx ZP_6B
+    ldx zp_aux_lo
     ldy #$00
 @
-    lda (ZP_61),y
+    lda (zp_str_lo),y
     cmp #$2d
     beq @+
     cmp unknown_word_buf,x
@@ -2143,8 +2143,8 @@ L3635:
     bne @+
     ldx gram_case
     lda bit_mask_table,x
-    ora ZP_6C
-    sta ZP_6C
+    ora zp_aux_hi
+    sta zp_aux_hi
 @
     inc gram_case
     lda gram_case
@@ -2152,13 +2152,13 @@ L3635:
     beq @+1
     ldy #$00
 @
-    lda (ZP_61),y
-    INCPTR ZP_61
+    lda (zp_str_lo),y
+    INCPTR zp_str_lo
     cmp #$2d
     bne @-
     jmp @-4
 @
-    lda ZP_6C
+    lda zp_aux_hi
     ldx $1556
     sta $14fe,x
     inc $1556
@@ -2167,8 +2167,8 @@ L3635:
     beq @+1
 @
     ldy #$00
-    lda (ZP_61),y
-    INCPTR ZP_61
+    lda (zp_str_lo),y
+    INCPTR zp_str_lo
     cmp #$2d
     bne @-
     jmp @-7
@@ -2182,7 +2182,7 @@ L3635:
     bne @-
     cmp #$00
     bne @+
-    jmp L3635
+    jmp skip_to_next_adj
 @
     ROMON
     lda #$02
@@ -2190,23 +2190,23 @@ L3635:
     lda $2c73
     sta $14fd
     rts
-sub_370c:
-    jsr sub_3509
+classify_token:
+    jsr match_noun
     cmp #$ff
     beq @+
     rts
 @
-    jsr sub_35fc
+    jsr match_adjective
     cmp #$ff
     beq @+
     rts
 @
-    jsr sub_332c
+    jsr match_verb
     cmp #$ff
     beq @+
     rts
 @
-    jsr sub_339a
+    jsr match_preposition
     cmp #$ff
     beq @+
     rts
@@ -2215,19 +2215,19 @@ sub_370c:
     sta word_match_buf
     rts
 check_word_valid:
-    jsr sub_370c
+    jsr classify_token
     lda $14fd
     sta $2c73
     lda word_match_buf
     bne @+
-    ldx #<msg_1770
-    ldy #>msg_1770
+    ldx #<msg_unknown_word
+    ldy #>msg_unknown_word
     jsr print_string
     ldx #<unknown_word_buf
     ldy #>unknown_word_buf
     jsr print_string
-    ldx #<msg_1786
-    ldy #>msg_1786
+    ldx #<msg_quote_newline
+    ldy #>msg_quote_newline
     jsr print_string
     lda #$ff
 @
@@ -2276,9 +2276,9 @@ read_input_line:
     jmp @-2
 @
     lda #<abbrev_str_table
-    sta ZP_69
+    sta zp_ptr_lo
     lda #>abbrev_str_table
-    sta ZP_6A
+    sta zp_ptr_hi
     ldx #$00
 @
     cpx #$0b
@@ -2287,7 +2287,7 @@ read_input_line:
 @
     ldy #$00
 @
-    lda (ZP_69),y
+    lda (zp_ptr_lo),y
     cmp input_line_buf,y
     bne @+
     cmp #$00
@@ -2296,8 +2296,8 @@ read_input_line:
     jmp @-
 @
     ldy #$00
-    lda (ZP_69),y
-    INCPTR ZP_69
+    lda (zp_ptr_lo),y
+    INCPTR zp_ptr_lo
     cmp #$00
     bne @-
     inx
@@ -2307,12 +2307,12 @@ read_input_line:
     asl @
     tax
     lda abbrev_ptr_table,x
-    sta ZP_69
+    sta zp_ptr_lo
     lda $1718,x
-    sta ZP_6A
+    sta zp_ptr_hi
     ldy #$00
 @
-    lda (ZP_69),y
+    lda (zp_ptr_lo),y
     sta input_line_buf,y
     iny
     cmp #$00
@@ -2320,11 +2320,11 @@ read_input_line:
 @
     rts
 print_string:
-    stx ZP_69
-    sty ZP_6A
+    stx zp_ptr_lo
+    sty zp_ptr_hi
     ldy #$00
 @
-    lda (ZP_69),y
+    lda (zp_ptr_lo),y
     beq @+
     CHROUT
     iny
@@ -2370,12 +2370,12 @@ get_filtered_key:
     cmp #$3a
     bcs get_filtered_key
     rts
-sub_385e:
+print_dont_understand:
     ldx #<str_word_too_long
     ldy #>str_word_too_long
     jsr print_string
     rts
-sub_3866:
+skip_leading_spaces:
     lda input_line_buf
     cmp #$20
     beq @+
@@ -2388,25 +2388,25 @@ sub_3866:
     inx
     cmp #$00
     bne @-
-    jmp sub_3866
-sub_387e:
+    jmp skip_leading_spaces
+extract_next_token:
     lda token_count
     asl @
     asl @
     asl @
     asl @
     adc #$60
-    sta ZP_69
+    sta zp_ptr_lo
     lda #$15
     adc #$00
-    sta ZP_6A
+    sta zp_ptr_hi
     ldy #$00
 @
     lda input_line_buf
     beq @+1
     cmp #$20
     beq @+1
-    sta (ZP_69),y
+    sta (zp_ptr_lo),y
     iny
     ldx #$00
 @
@@ -2424,7 +2424,7 @@ sub_387e:
     lda #$01
     rts
 @
-    jsr sub_3866
+    jsr skip_leading_spaces
     inc token_count
     lda #$00
     rts
@@ -2438,15 +2438,15 @@ read_and_tokenize:
     bne @-
     lda #$00
     sta token_count
-    jsr sub_3866
+    jsr skip_leading_spaces
     lda input_line_buf
     beq read_and_tokenize
     lda #$00
     sta token_count
 @
-    jsr sub_387e
+    jsr extract_next_token
     beq @+
-    jsr sub_385e
+    jsr print_dont_understand
     jmp read_and_tokenize
 @
     lda token_count
@@ -2454,7 +2454,7 @@ read_and_tokenize:
     bne @+1
     lda input_line_buf
     beq @+
-    jsr sub_3906
+    jsr print_sentence_too_long
     jmp read_and_tokenize
 @
     rts
@@ -2462,11 +2462,11 @@ read_and_tokenize:
     lda input_line_buf
     bne @-3
     rts
-sub_3906:
+print_sentence_too_long:
     ldx #<str_sentence_too_long
     ldy #>str_sentence_too_long
     jmp print_string
-sub_390d:
+load_parsed_word:
     lda word_idx
     asl @
     asl @
@@ -2483,7 +2483,7 @@ sub_390d:
     lda word_match_buf
     rts
 parse_clause:
-    jsr sub_390d
+    jsr load_parsed_word
     cmp #$03
     bne @+
     ldx clause_idx
@@ -2521,14 +2521,14 @@ parse_clause:
     lda #$ff
     sta $2cb8
 @
-    jsr sub_39df
+    jsr parse_noun_phrase
     bpl @+
     rts
 @
     ldx $2cca
-    lda cur_adj1
+    lda cur_adj_first
     sta $2ccb,x
-    lda cur_adj2
+    lda cur_adj_second
     sta $2cdb,x
     lda cur_noun
     sta $2ceb,x
@@ -2553,7 +2553,7 @@ parse_clause:
     lda #$00
     rts
 @
-    jsr sub_390d
+    jsr load_parsed_word
     lda word_match_buf
     cmp #$04
     bne @-2
@@ -2563,7 +2563,7 @@ parse_clause:
     bcs @+
     jmp @-4
     dta $00
-sub_39df:
+parse_noun_phrase:
     lda word_idx
     cmp token_count
     bcc @+1
@@ -2571,10 +2571,10 @@ sub_39df:
     lda #$ff
     rts
 @
-    jsr sub_390d
+    jsr load_parsed_word
     lda #$ff
-    sta cur_adj1
-    sta cur_adj2
+    sta cur_adj_first
+    sta cur_adj_second
     ldx #$00
 @
     sta $2ca8,x
@@ -2587,7 +2587,7 @@ sub_39df:
     cmp #$02
     bne @-2
     lda $14fd
-    sta cur_adj1
+    sta cur_adj_first
     ldx #$00
 @
     lda $2ca8,x
@@ -2600,14 +2600,14 @@ sub_39df:
     lda word_idx
     cmp token_count
     bcs @-3
-    jsr sub_390d
+    jsr load_parsed_word
     lda word_match_buf
     cmp #$01
     beq @+1
     cmp #$02
     bne @-3
     lda $14fd
-    sta cur_adj2
+    sta cur_adj_second
     ldx #$00
 @
     lda $2ca8,x
@@ -2620,7 +2620,7 @@ sub_39df:
     lda word_idx
     cmp token_count
     bcs @-4
-    jsr sub_390d
+    jsr load_parsed_word
     lda word_match_buf
     cmp #$01
     beq @+
@@ -2633,7 +2633,7 @@ sub_39df:
     sta $2cb8
     lda cur_noun
     sta $2c73
-    jsr sub_32b0
+    jsr get_noun_gender
     ldx #$00
 @
     cpx $2c77
@@ -2651,32 +2651,32 @@ sub_39df:
 print_inflected_noun:
     lda cur_noun
     sta $2c73
-    jsr sub_32b0
+    jsr get_noun_gender
     lda $2c77
-    lda cur_adj1
+    lda cur_adj_first
     cmp #$ff
     beq @+
     sta $2c73
-    jsr sub_31b4
-    lda cur_adj2
+    jsr print_adjective_by_id
+    lda cur_adj_second
     cmp #$ff
     beq @+
     sta $2c73
-    jsr sub_31b4
+    jsr print_adjective_by_id
 @
     lda cur_noun
     sta $2c73
     sta $2c8a
-    jmp L30B7
+    jmp print_noun_by_id
 load_room_exits:
     pha
-    ldx #<msg_18a0
-    ldy #>msg_18a0
+    ldx #<msg_you_are_in
+    ldy #>msg_you_are_in
     jsr print_string
     lda #<room_desc_table
-    sta ZP_69
+    sta zp_ptr_lo
     lda #>room_desc_table
-    sta ZP_6A
+    sta zp_ptr_hi
     ldy #$00
     pla
     tax
@@ -2685,20 +2685,20 @@ load_room_exits:
     beq @+1
     ldy #$00
 @
-    lda (ZP_69),y
-    INCPTR ZP_69
+    lda (zp_ptr_lo),y
+    INCPTR zp_ptr_lo
     cmp #$00
     beq @-1
     jmp @-
 @
-    lda (ZP_69),y
+    lda (zp_ptr_lo),y
     iny
     CHROUT
     cmp #$00
     bne @-
     lda #$0d
     CHROUT_JMP
-sub_3b04:
+match_object_words:
     ldy #$00
     jsr read_bank_byte
     sta $1481
@@ -2712,7 +2712,7 @@ sub_3b04:
     lda #$01
     rts
 @
-    lda cur_adj1
+    lda cur_adj_first
     cmp #$ff
     bne @+1
 @
@@ -2721,7 +2721,7 @@ sub_3b04:
 @
     cmp $1481
     bne @+
-    lda cur_adj2
+    lda cur_adj_second
     cmp #$ff
     beq @-1
     cmp $1482
@@ -2731,7 +2731,7 @@ sub_3b04:
 @
     cmp $1482
     bne @+
-    lda cur_adj2
+    lda cur_adj_second
     cmp #$ff
     beq @-2
     cmp $1481
@@ -2739,13 +2739,13 @@ sub_3b04:
 @
     lda #$01
     rts
-sub_3b51:
+find_matching_object:
     sta $1483
     lda #$01
     sta temp_obj_idx
     lda #$00
     sta $1484
-L3B5E:
+find_object_loop:
     lda temp_obj_idx
     jsr get_object_ptr
     ldy #$00
@@ -2754,7 +2754,7 @@ L3B5E:
     bne @+
     rts
 @
-    jsr sub_3b04
+    jsr match_object_words
     cmp #$00
     beq @+
     jmp @+9
@@ -2787,7 +2787,7 @@ L3B5E:
     beq @+
     ldy #$03
     jsr read_bank_byte
-    cmp cmd_verb_arg1
+    cmp cmd_actor_obj
     bne @+
     jmp @+5
 @
@@ -2800,7 +2800,7 @@ L3B5E:
     beq @+1
     ldy #$03
     jsr read_bank_byte
-    cmp cmd_verb_arg1
+    cmp cmd_actor_obj
     beq @+1
     cmp #$ff
     beq @+1
@@ -2835,7 +2835,7 @@ L3B5E:
     beq @+1
     ldy #$03
     jsr read_bank_byte
-    cmp cmd_verb_arg1
+    cmp cmd_actor_obj
     beq @+1
     cmp #$ff
     beq @+1
@@ -2886,51 +2886,51 @@ L3B5E:
     sta $2d0b
 @
     inc temp_obj_idx
-    jmp L3B5E
-sub_3c98:
+    jmp find_object_loop
+validate_clause_prep:
     lda cmd_verb_id
     cmp #$00
     bne @+
-L3C9F:
+clause_prep_invalid:
     lda #$ff
     rts
 @
     cmp #$01
-    beq L3C9F
+    beq clause_prep_invalid
     cmp #$02
-    beq L3C9F
+    beq clause_prep_invalid
     cmp #$03
     bne @+
-    lda #<syntax_rule_0
-    sta ZP_69
-    lda #>syntax_rule_0
-    sta ZP_6A
-    jmp L3D1A
+    lda #<syntax_rule_open
+    sta zp_ptr_lo
+    lda #>syntax_rule_open
+    sta zp_ptr_hi
+    jmp check_syntax_rule_table
 @
     cmp #$04
     bne @+
-    lda #<syntax_rule_1
-    sta ZP_69
-    lda #>syntax_rule_1
-    sta ZP_6A
-    jmp L3D1A
+    lda #<syntax_rule_examine
+    sta zp_ptr_lo
+    lda #>syntax_rule_examine
+    sta zp_ptr_hi
+    jmp check_syntax_rule_table
 @
     cmp #$05
     bne @+
-    lda #<syntax_rule_2
-    sta ZP_69
-    lda #>syntax_rule_2
-    sta ZP_6A
-    jmp L3D1A
+    lda #<syntax_rule_inv
+    sta zp_ptr_lo
+    lda #>syntax_rule_inv
+    sta zp_ptr_hi
+    jmp check_syntax_rule_table
 @
     cmp #$07
     bne @+1
 @
-    lda #<syntax_rule_3
-    sta ZP_69
-    lda #>syntax_rule_3
-    sta ZP_6A
-    jmp L3D1A
+    lda #<syntax_rule_combat
+    sta zp_ptr_lo
+    lda #>syntax_rule_combat
+    sta zp_ptr_hi
+    jmp check_syntax_rule_table
 @
     cmp #$08
     beq @-1
@@ -2949,11 +2949,11 @@ L3C9F:
     cmp #$0c
     bne @+1
 @
-    lda #<syntax_rule_4
-    sta ZP_69
-    lda #>syntax_rule_4
-    sta ZP_6A
-    jmp L3D1A
+    lda #<syntax_rule_meta
+    sta zp_ptr_lo
+    lda #>syntax_rule_meta
+    sta zp_ptr_hi
+    jmp check_syntax_rule_table
 @
     cmp #$0d
     bne @+1
@@ -2965,7 +2965,7 @@ L3C9F:
     beq @-1
     lda #$ff
     rts
-L3D1A:
+check_syntax_rule_table:
     ldx #$00
 @
     lda $2cc2,x
@@ -2979,17 +2979,17 @@ L3D1A:
     inx
     cpx clause_idx
     bne @-1
-    jmp L3C9F
+    jmp clause_prep_invalid
 @
     ldy #$00
 @
-    lda (ZP_69),y
+    lda (zp_ptr_lo),y
     cmp #$fe
     beq @-2
     cmp $2c98,x
     bne @+
     iny
-    lda (ZP_69),y
+    lda (zp_ptr_lo),y
     dey
     and $2cb0,x
     bne @+1
@@ -3016,8 +3016,8 @@ L3D1A:
     sta $1488
     lda #$00
     rts
-sub_3d81:
-    lda cmd_verb_arg1
+print_actor_says_prefix:
+    lda cmd_actor_obj
     cmp #$ff
     bne @+
     rts
@@ -3026,20 +3026,20 @@ sub_3d81:
     CHROUT
     lda #$00
     sta gram_case
-    lda cmd_verb_arg1
+    lda cmd_actor_obj
     jsr print_object_name
     lda #$01
     sta $2c8b
     lda #$06
     sta $2c73
-    jsr sub_3482
+    jsr print_verb_form
     lda #$3a
     CHROUT
     lda #$0d
     CHROUT
     lda #$20
     CHROUT_JMP
-sub_3db5:
+resolve_all_cmd_objects:
     sta $14a6
     ldx #$00
     stx clause_idx
@@ -3052,13 +3052,13 @@ sub_3db5:
 @
     tax
     lda $148a,x
-    sta cur_adj1
+    sta cur_adj_first
     lda $1492,x
-    sta cur_adj2
+    sta cur_adj_second
     lda $149a,x
     sta cur_noun
     lda $14a6
-    jsr sub_3b51
+    jsr find_matching_object
     lda $1484
     cmp #$01
     bne @+
@@ -3068,20 +3068,20 @@ sub_3db5:
     inc clause_idx
     jmp @-1
 @
-    jsr sub_3f44
+    jsr report_object_not_found
     lda #$ff
     rts
-sub_3dfd:
+print_action_feedback:
     lda #$9f
     CHROUT
     lda #$0d
     CHROUT
-    lda cmd_verb_arg1
+    lda cmd_actor_obj
     cmp #$ff
     beq @+
     lda #$00
     sta gram_case
-    lda cmd_verb_arg1
+    lda cmd_actor_obj
     jsr print_object_name
     lda #$01
     dta $2c ; BIT abs trick to skip next 2-byte instruction
@@ -3090,7 +3090,7 @@ sub_3dfd:
     sta $2c8b
     lda cmd_verb_id
     sta $2c73
-    jsr sub_3482
+    jsr print_verb_form
     lda cmd_obj_count
     bne @+
     rts
@@ -3104,13 +3104,13 @@ sub_3dfd:
     sta $2c73
     lda $14a4
     sta $2cb9
-    jsr sub_3418
+    jsr print_preposition
 @
     lda $14a2
-    jsr sub_3f2a
+    jsr mask_to_gram_case
     lda temp_obj_idx
-    jsr sub_3e7f
-L3E58:
+    jsr print_obj_or_dir_name
+print_action_prep_phrase:
     lda cmd_prep
     cmp #$ff
     bne @+
@@ -3122,14 +3122,14 @@ L3E58:
     sta $2c73
     lda #$00
     sta $2cb9
-    jsr sub_3418
+    jsr print_preposition
 @
     lda $1486
-    jsr sub_3f2a
+    jsr mask_to_gram_case
     lda cmd_prep
     jsr print_object_name
     rts
-sub_3e7f:
+print_obj_or_dir_name:
     cmp #$f0
     bcs @+
     jmp print_object_name
@@ -3137,8 +3137,8 @@ sub_3e7f:
     and #$0f
     sta temp_dir_idx
     jmp print_direction_name
-sub_3e8e:
-    lda cur_adj2
+match_direction_phrase:
+    lda cur_adj_second
     cmp #$ff
     beq @+
     lda #$ff
@@ -3147,7 +3147,7 @@ sub_3e8e:
     ldx #$00
 @
     lda dir_adj_table,x
-    cmp cur_adj1
+    cmp cur_adj_first
     bne @+
     lda dir_noun_table,x
     cmp cur_noun
@@ -3160,29 +3160,29 @@ sub_3e8e:
     bcc @-1
     lda #$ff
     rts
-sub_3eb4:
+print_cannot_do_action:
     lda #$0d
     CHROUT
-    jsr sub_3d81
+    jsr print_actor_says_prefix
     lda #$9f
     CHROUT
-    lda cmd_verb_arg1
+    lda cmd_actor_obj
     cmp #$ff
     beq @+
-    ldx #<msg_1834
-    ldy #>msg_1834
+    ldx #<msg_i_cannot
+    ldy #>msg_i_cannot
     jsr print_string
-    jmp L3ED9
+    jmp print_cannot_infinitive
 @
-    ldx #<msg_183f
-    ldy #>msg_183f
+    ldx #<msg_you_cannot
+    ldy #>msg_you_cannot
     jsr print_string
-L3ED9:
+print_cannot_infinitive:
     lda cmd_verb_id
     sta $2c73
     lda #$02
     sta $2c8b
-    jsr sub_3482
+    jsr print_verb_form
     lda cmd_obj_count
     bne @+
     rts
@@ -3196,7 +3196,7 @@ L3ED9:
     sta $2c73
     lda $14a4
     sta $2cb9
-    jsr sub_3418
+    jsr print_preposition
     jmp @+1
 @
     lda $14a2
@@ -3207,16 +3207,16 @@ L3ED9:
     jmp @+1
 @
     lda $14a2
-    jsr sub_3f2a
+    jsr mask_to_gram_case
 @
     lda temp_obj_idx
     jsr print_object_name
-    jmp L3E58
-sub_3f2a:
+    jmp print_action_prep_phrase
+mask_to_gram_case:
     ldx #$00
-    sta ZP_69
+    sta zp_ptr_lo
 @
-    lda ZP_69
+    lda zp_ptr_lo
     and bit_mask_table,x
     beq @+
     stx gram_case
@@ -3228,7 +3228,7 @@ sub_3f2a:
     lda #$00
     sta gram_case
     rts
-sub_3f44:
+report_object_not_found:
     lda $1484
     cmp #$01
     bne @+
@@ -3237,21 +3237,21 @@ sub_3f44:
 @
     lda cur_noun
     pha
-    lda cur_adj1
+    lda cur_adj_first
     pha
-    lda cur_adj2
+    lda cur_adj_second
     pha
-    jsr sub_3d81
+    jsr print_actor_says_prefix
     pla
-    sta cur_adj2
+    sta cur_adj_second
     pla
-    sta cur_adj1
+    sta cur_adj_first
     pla
     sta cur_noun
     lda $1484
     beq @+
-    ldx #<msg_180e
-    ldy #>msg_180e
+    ldx #<msg_do_precise
+    ldy #>msg_do_precise
     jsr print_string
     lda #$03
     sta gram_case
@@ -3259,16 +3259,16 @@ sub_3f44:
     lda #$ff
     rts
 @
-    lda cmd_verb_arg1
+    lda cmd_actor_obj
     cmp #$ff
     beq @+
-    ldx #<msg_1828
-    ldy #>msg_1828
+    ldx #<msg_i_dont_see
+    ldy #>msg_i_dont_see
     jsr print_string
     jmp @+1
 @
-    ldx #<msg_181a
-    ldy #>msg_181a
+    ldx #<msg_you_dont_see
+    ldy #>msg_you_dont_see
     jsr print_string
 @
     lda #$01
@@ -3276,13 +3276,13 @@ sub_3f44:
     jsr print_inflected_noun
     lda #$ff
     rts
-sub_3fa3:
+get_room_exits_ptr:
     pha
     RAMON
     lda $c010
-    sta ZP_69
+    sta zp_ptr_lo
     lda $c011
-    sta ZP_6A
+    sta zp_ptr_hi
     ROMON
     pla
     tax
@@ -3290,12 +3290,12 @@ sub_3fa3:
     dex
     beq @+
     clc
-    lda ZP_69
+    lda zp_ptr_lo
     adc #$0a
-    sta ZP_69
-    lda ZP_6A
+    sta zp_ptr_lo
+    lda zp_ptr_hi
     adc #$00
-    sta ZP_6A
+    sta zp_ptr_hi
     jmp @-
 @
     rts
@@ -3304,11 +3304,11 @@ get_random_byte:
 @
     lda rng_seed_hi
     and #$a4
-    sta ZP_69
+    sta zp_ptr_lo
     ldx #$08
     lda #$00
 @
-    lsr ZP_69
+    lsr zp_ptr_lo
     adc #$00
     dex
     bne @-
@@ -3321,7 +3321,7 @@ get_random_byte:
     bne @-1
     lda rng_seed_lo
     rts
-sub_3ffa:
+update_trolls_event:
     lda $2d10
     bpl @+
     rts
@@ -3336,21 +3336,21 @@ sub_3ffa:
     lda #$0d
     CHROUT
     lda #$0b
-    sta cmd_verb_arg1
-    jsr sub_3d81
-    ldx #<msg_18b2
-    ldy #>msg_18b2
+    sta cmd_actor_obj
+    jsr print_actor_says_prefix
+    ldx #<msg_trolls_breakfast
+    ldy #>msg_trolls_breakfast
     jsr print_string
     lda #$0a
-    sta cmd_verb_arg1
-    jsr sub_3d81
-    ldx #<msg_18d4
-    ldy #>msg_18d4
+    sta cmd_actor_obj
+    jsr print_actor_says_prefix
+    ldx #<msg_trolls_too_small
+    ldy #>msg_trolls_too_small
     jsr print_string
     rts
 @
-    ldx #<msg_18fe
-    ldy #>msg_18fe
+    ldx #<msg_trolls_eat_you
+    ldy #>msg_trolls_eat_you
     jsr print_string
     jmp ask_play_again
 @
@@ -3372,11 +3372,11 @@ sub_3ffa:
     rts
 @
     lda #$0a
-    jsr sub_4094
+    jsr kill_object_to_corpse
     lda #$0b
-    jsr sub_4094
-    ldx #<msg_1953
-    ldy #>msg_1953
+    jsr kill_object_to_corpse
+    ldx #<msg_dawn_breaks
+    ldy #>msg_dawn_breaks
     jsr print_string
     lda #$80
     sta $2d10
@@ -3385,25 +3385,25 @@ sub_3ffa:
     RAMON
     ldy #$05
     lda #$80
-    sta (ZP_69),y
+    sta (zp_ptr_lo),y
     ldy #$03
     lda #$03
-    sta (ZP_69),y
+    sta (zp_ptr_lo),y
     ROMON
     rts
-sub_4094:
+kill_object_to_corpse:
     jsr get_object_ptr
     RAMON
     ldy #$00
-    lda (ZP_69),y
+    lda (zp_ptr_lo),y
     iny
-    sta (ZP_69),y
+    sta (zp_ptr_lo),y
     dey
     lda #$12
-    sta (ZP_69),y
+    sta (zp_ptr_lo),y
     ROMON
     rts
-sub_40b4:
+is_object_dead:
     jsr get_object_ptr
     ldy #$00
 @
@@ -3420,9 +3420,9 @@ sub_40b4:
 @
     lda #$01
     rts
-sub_40cf:
+update_warg_event:
     lda #$05
-    jsr sub_40b4
+    jsr is_object_dead
     cmp #$00
     beq @+
     rts
@@ -3442,7 +3442,7 @@ sub_40cf:
     RAMON
     ldy #$03
     lda $14a5
-    sta (ZP_69),y
+    sta (zp_ptr_lo),y
     ROMON
     lda $14a5
     cmp current_room
@@ -3450,7 +3450,7 @@ sub_40cf:
     rts
 @
     lda #$05
-    jsr sub_4883
+    jsr print_npc_enters
     lda #$01
     sta $2d11
     rts
@@ -3459,18 +3459,18 @@ sub_40cf:
     lda $2d11
     cmp #$04
     bcs @+
-    ldx #<msg_1b54
-    ldy #>msg_1b54
+    ldx #<msg_warg_attacks
+    ldy #>msg_warg_attacks
     jsr print_string
     rts
 @
-    ldx #<msg_1b73
-    ldy #>msg_1b73
+    ldx #<msg_warg_kills_you
+    ldy #>msg_warg_kills_you
     jsr print_string
     jmp ask_play_again
-sub_413f:
+update_spider_event:
     lda #$31
-    jsr sub_40b4
+    jsr is_object_dead
     cmp #$00
     beq @+
     rts
@@ -3488,34 +3488,34 @@ sub_413f:
     lda $2d14
     cmp #$06
     bcs @+
-    ldx #<msg_1b9b
-    ldy #>msg_1b9b
+    ldx #<msg_spider_attacks
+    ldy #>msg_spider_attacks
     jsr print_string
     rts
 @
-    ldx #<msg_1bb5
-    ldy #>msg_1bb5
+    ldx #<msg_spider_kills_you
+    ldy #>msg_spider_kills_you
     jsr print_string
     jmp ask_play_again
-sub_4178:
+is_player_wearing_ring:
     lda #$11
     jsr get_object_ptr
     ldy #$03
     jsr read_bank_byte
     cmp #$ff
     rts
-sub_4185:
-    jsr sub_4178
+update_secret_door_visibility:
+    jsr is_player_wearing_ring
     bne @+
     lda #$22
     jsr get_object_ptr
     RAMON
     ldy #$03
     lda #$2c
-    sta (ZP_69),y
+    sta (zp_ptr_lo),y
     lda #$2e
     iny
-    sta (ZP_69),y
+    sta (zp_ptr_lo),y
     ROMON
     rts
 @
@@ -3524,12 +3524,12 @@ sub_4185:
     RAMON
     ldy #$03
     lda #$00
-    sta (ZP_69),y
+    sta (zp_ptr_lo),y
     iny
-    sta (ZP_69),y
+    sta (zp_ptr_lo),y
     ROMON
     rts
-sub_41ca:
+update_elves_capture_event:
     lda #$33
     jsr get_object_ptr
     ldy #$03
@@ -3554,16 +3554,16 @@ sub_41ca:
     RAMON
     lda #$39
     ldy #$03
-    sta (ZP_69),y
+    sta (zp_ptr_lo),y
     ROMON
 @
-    ldx #<msg_1d32
-    ldy #>msg_1d32
+    ldx #<msg_elves_capture
+    ldy #>msg_elves_capture
     jsr print_string
     pla
     pla
     jmp room_loop
-sub_4216:
+update_barrel_guard_event:
     lda current_room
     cmp #$3b
     beq @+
@@ -3574,11 +3574,11 @@ sub_4216:
     beq @+
     rts
 @
-    ldx #<msg_1ea6
-    ldy #>msg_1ea6
+    ldx #<msg_guard_throws_barrel
+    ldy #>msg_guard_throws_barrel
     jsr print_string
     rts
-sub_422e:
+update_elrond_and_gollum_events:
     lda $2d1a
     beq @+1
 @
@@ -3587,9 +3587,9 @@ sub_422e:
     RAMON
     ldy #$03
     lda #$00
-    sta (ZP_69),y
+    sta (zp_ptr_lo),y
     iny
-    sta (ZP_69),y
+    sta (zp_ptr_lo),y
     ROMON
     rts
 @
@@ -3619,16 +3619,16 @@ sub_422e:
     RAMON
     ldy #$03
     lda #$ff
-    sta (ZP_69),y
+    sta (zp_ptr_lo),y
     ldy #$05
     lda #$20
-    sta (ZP_69),y
+    sta (zp_ptr_lo),y
     ROMON
-    ldx #<msg_1a5a
-    ldy #>msg_1a5a
+    ldx #<msg_elrond_advice
+    ldy #>msg_elrond_advice
     jsr print_string
     rts
-sub_42a6:
+check_map_acquired:
     lda $2d1a
     beq @+
     rts
@@ -3642,7 +3642,7 @@ sub_42a6:
     inc $2d1a
 @
     rts
-sub_42be:
+update_beorn_event:
     lda $2d12
     beq @+
     jmp @+6
@@ -3661,10 +3661,10 @@ sub_42be:
     RAMON
     ldy #$03
     lda #$ff
-    sta (ZP_69),y
+    sta (zp_ptr_lo),y
     ROMON
-    ldx #<msg_2121
-    ldy #>msg_2121
+    ldx #<msg_beorn_gives_food
+    ldy #>msg_beorn_gives_food
     jsr print_string
     rts
 @
@@ -3690,7 +3690,7 @@ sub_42be:
     CHROUT
     lda #$04
     ldx #$21
-    jsr sub_47b1
+    jsr npc_perform_action
     rts
 @
     lda current_room
@@ -3698,11 +3698,11 @@ sub_42be:
     beq @+
     rts
 @
-    ldx #<msg_1f9a
-    ldy #>msg_1f9a
+    ldx #<msg_beorn_kills_you
+    ldy #>msg_beorn_kills_you
     jsr print_string
     jmp ask_play_again
-sub_4338:
+update_gandalf_event:
     lda #$02
     jsr get_object_ptr
     ldy #$03
@@ -3722,18 +3722,18 @@ sub_4338:
     jsr read_bank_byte
     cmp #$02
     bne @+
-    jmp L599D
+    jmp victory_ending
 @
     jsr get_random_byte
     and #$03
     beq @+
     rts
 @
-    ldx #<msg_205e
-    ldy #>msg_205e
+    ldx #<msg_gandalf_hurry
+    ldy #>msg_gandalf_hurry
     jsr print_string
     rts
-sub_4375:
+update_thorin_ai:
     lda #$01
     jsr get_object_ptr
     ldy #$03
@@ -3748,7 +3748,7 @@ sub_4375:
     cmp #$13
     beq @+2
     lda $14a5
-    jsr sub_3fa3
+    jsr get_room_exits_ptr
     ldy #$00
 @
     jsr read_bank_byte
@@ -3760,7 +3760,7 @@ sub_4375:
     jmp @+2
 @
     sty temp_dir_idx
-    jsr sub_4829
+    jsr find_door_in_direction
     cmp #$ff
     beq @+
     sta temp_obj_idx
@@ -3775,7 +3775,7 @@ sub_4375:
     bne @+
     lda #$01
     ldx temp_obj_idx
-    jsr sub_47b1
+    jsr npc_perform_action
     jmp @+1
 @
     lda #$01
@@ -3783,11 +3783,11 @@ sub_4375:
     RAMON
     lda current_room
     ldy #$03
-    sta (ZP_69),y
+    sta (zp_ptr_lo),y
     sta $14a5
     ROMON
     lda #$01
-    jsr sub_4883
+    jsr print_npc_enters
 @
     lda turn_wait_cnt
     beq @+
@@ -3806,15 +3806,15 @@ sub_4375:
     lda $14a5
     cmp current_room
     bne @+
-    ldx #<msg_1eeb
-    ldy #>msg_1eeb
+    ldx #<msg_thorin_axe_story
+    ldy #>msg_thorin_axe_story
     jsr print_string
     lda #$14
     jsr get_object_ptr
     RAMON
     ldy #$03
     lda #$01
-    sta (ZP_69),y
+    sta (zp_ptr_lo),y
     ROMON
 @
     lda #$14
@@ -3830,16 +3830,16 @@ sub_4375:
     RAMON
     lda #$20
     ldy #$05
-    sta (ZP_69),y
+    sta (zp_ptr_lo),y
     lda #$01
     ldy #$03
-    sta (ZP_69),y
+    sta (zp_ptr_lo),y
     ROMON
     lda current_room
     cmp $14a5
     bne @+
-    ldx #<msg_1eeb
-    ldy #>msg_1eeb
+    ldx #<msg_thorin_axe_story
+    ldy #>msg_thorin_axe_story
     jsr print_string
 @
     lda current_room
@@ -3853,19 +3853,19 @@ sub_4375:
     bne @+
     lda turn_wait_cnt
     bne @+
-    ldx #<msg_22d9
-    ldy #>msg_22d9
+    ldx #<msg_thorin_leaves
+    ldy #>msg_thorin_leaves
     jsr print_string
     lda #$01
     jsr get_object_ptr
     RAMON
     ldy #$03
     lda #$00
-    sta (ZP_69),y
+    sta (zp_ptr_lo),y
     ROMON
 @
     rts
-sub_44c9:
+update_goblins_event:
     lda #$11
     jsr get_object_ptr
     ldy #$03
@@ -3877,8 +3877,8 @@ sub_44c9:
     lda current_room
     cmp #$12
     bne @+
-    ldx #<msg_1966
-    ldy #>msg_1966
+    ldx #<msg_goblins_capture
+    ldy #>msg_goblins_capture
     jsr print_string
     lda #$13
     sta current_room
@@ -3907,7 +3907,7 @@ sub_44c9:
     and #$07
     sta temp_dir_idx
     lda $14a5
-    jsr sub_3fa3
+    jsr get_room_exits_ptr
     ldy temp_dir_idx
     jsr read_bank_byte
     cmp #$14
@@ -3925,15 +3925,15 @@ sub_44c9:
     sta gram_case
     lda $14a7
     jsr print_object_name
-    ldx #<msg_19b1
-    ldy #>msg_19b1
+    ldx #<msg_goes_to
+    ldy #>msg_goes_to
     jsr print_string
     lda #$03
     sta gram_case
     jsr print_direction_name
 @
     lda $14a5
-    jsr sub_3fa3
+    jsr get_room_exits_ptr
     ldy temp_dir_idx
     jsr read_bank_byte
     sta $14a5
@@ -3942,13 +3942,13 @@ sub_44c9:
     RAMON
     ldy #$03
     lda $14a5
-    sta (ZP_69),y
+    sta (zp_ptr_lo),y
     ROMON
     lda $14a5
     cmp current_room
     bne @+
     lda $14a7
-    jsr sub_4883
+    jsr print_npc_enters
 @
     inc $14a7
     lda $14a7
@@ -3957,7 +3957,7 @@ sub_44c9:
     rts
 @
     jmp @-5
-sub_45a6:
+update_bard_kills_dragon:
     lda $2d19
     bne @+
     rts
@@ -3978,21 +3978,21 @@ sub_45a6:
     RAMON
     ldy #$03
     lda #$00
-    sta (ZP_69),y
+    sta (zp_ptr_lo),y
     ROMON
     lda $14a5
     cmp current_room
     bne @+
-    ldx #<msg_223d
-    ldy #>msg_223d
+    ldx #<msg_bard_kills_dragon
+    ldy #>msg_bard_kills_dragon
     jsr print_string
     rts
 @
-    ldx #<msg_225e
-    ldy #>msg_225e
+    ldx #<msg_dying_dragon_roar
+    ldy #>msg_dying_dragon_roar
     jsr print_string
     rts
-sub_45f7:
+update_wandering_npcs:
     lda #$0d
     jsr get_object_ptr
     ldy #$03
@@ -4011,7 +4011,7 @@ sub_45f7:
     and #$07
     sta temp_dir_idx
     lda $14a5
-    jsr sub_3fa3
+    jsr get_room_exits_ptr
     ldy temp_dir_idx
     jsr read_bank_byte
     cmp #$3d
@@ -4030,15 +4030,15 @@ sub_45f7:
     sta gram_case
     lda #$0d
     jsr print_object_name
-    ldx #<msg_19b1
-    ldy #>msg_19b1
+    ldx #<msg_goes_to
+    ldy #>msg_goes_to
     jsr print_string
     lda #$03
     sta gram_case
     jsr print_direction_name
 @
     lda $14a5
-    jsr sub_3fa3
+    jsr get_room_exits_ptr
     ldy temp_dir_idx
     jsr read_bank_byte
     sta $14a5
@@ -4047,13 +4047,13 @@ sub_45f7:
     RAMON
     ldy #$03
     lda $14a5
-    sta (ZP_69),y
+    sta (zp_ptr_lo),y
     ROMON
     lda $14a5
     cmp current_room
     bne @+
     lda #$0d
-    jsr sub_4883
+    jsr print_npc_enters
 @
     rts
 @
@@ -4062,8 +4062,8 @@ sub_45f7:
     sta temp_dir_idx
     lda $2d13
     bne @+
-    ldx #<msg_2025
-    ldy #>msg_2025
+    ldx #<msg_bard_secret_pass
+    ldy #>msg_bard_secret_pass
     jsr print_string
     inc $2d13
     lda #$29
@@ -4071,10 +4071,10 @@ sub_45f7:
     RAMON
     ldy #$03
     lda #$40
-    sta (ZP_69),y
+    sta (zp_ptr_lo),y
     iny
     lda #$4c
-    sta (ZP_69),y
+    sta (zp_ptr_lo),y
     ROMON
 @
     lda temp_dir_idx
@@ -4082,14 +4082,14 @@ sub_45f7:
     jmp @-4
 @
     rts
-sub_46d6:
+update_dragon_movement:
     lda #$0f
     jsr get_object_ptr
     ldy #$03
     jsr read_bank_byte
     sta $14a5
     jmp @+2
-L46E6:
+move_npc_between_rooms:
     lda $14a5
     cmp current_room
     bne @+
@@ -4101,15 +4101,15 @@ L46E6:
     sta gram_case
     lda #$0f
     jsr print_object_name
-    ldx #<msg_19b1
-    ldy #>msg_19b1
+    ldx #<msg_goes_to
+    ldy #>msg_goes_to
     jsr print_string
     lda #$03
     sta gram_case
     jsr print_direction_name
 @
     lda $14a5
-    jsr sub_3fa3
+    jsr get_room_exits_ptr
     ldy temp_dir_idx
     jsr read_bank_byte
     sta $14a5
@@ -4118,17 +4118,17 @@ L46E6:
     RAMON
     ldy #$03
     lda $14a5
-    sta (ZP_69),y
+    sta (zp_ptr_lo),y
     ROMON
     lda $14a5
     cmp current_room
     bne @+
     lda #$0f
-    jsr sub_4883
+    jsr print_npc_enters
 @
     rts
 @
-    jsr sub_4178
+    jsr is_player_wearing_ring
     bne @+
     lda $2d16
     bne @+3
@@ -4137,8 +4137,8 @@ L46E6:
     bne @+
     lda #$01
     sta $2d16
-    ldx #<msg_1c98
-    ldy #>msg_1c98
+    ldx #<msg_gollum_laments
+    ldy #>msg_gollum_laments
     jsr print_string
     jmp @+3
 @
@@ -4155,7 +4155,7 @@ L46E6:
 @
     lda $2d2d,x
     sta temp_dir_idx
-    jmp L46E6
+    jmp move_npc_between_rooms
 @
     lda $14a5
     cmp current_room
@@ -4163,28 +4163,28 @@ L46E6:
     rts
 @
     lda #<npc_move_table
-    sta ZP_69
+    sta zp_ptr_lo
     lda #>npc_move_table
-    sta ZP_6A
+    sta zp_ptr_hi
     ldy #$00
 @
-    lda (ZP_69),y
+    lda (zp_ptr_lo),y
     bne @+
     rts
 @
     cmp $14a5
     bne @+
     iny
-    lda (ZP_69),y
+    lda (zp_ptr_lo),y
     sta temp_dir_idx
-    jmp L46E6
+    jmp move_npc_between_rooms
 @
     iny
     iny
     jmp @-2
-sub_47b1:
+npc_perform_action:
     stx cmd_obj_list
-    sta cmd_verb_arg1
+    sta cmd_actor_obj
     lda cmd_obj_list
     jsr get_object_ptr
     ldy #$07
@@ -4195,9 +4195,9 @@ sub_47b1:
 @
     RAMON
     ldy #$06
-    lda (ZP_69),y
+    lda (zp_ptr_lo),y
     ora #$10
-    sta (ZP_69),y
+    sta (zp_ptr_lo),y
     ROMON
     lda $14a5
     cmp current_room
@@ -4212,27 +4212,27 @@ sub_47b1:
     beq @+
     rts
 @
-    ldx #<msg_1a02
-    ldy #>msg_1a02
+    ldx #<msg_someone
+    ldy #>msg_someone
     jsr print_string
     jmp @+1
 @
     lda #$00
     sta gram_case
-    lda cmd_verb_arg1
+    lda cmd_actor_obj
     jsr print_object_name
 @
     lda #$01
     sta $2c8b
     lda #$07
     sta $2c73
-    jsr sub_3482
+    jsr print_verb_form
     lda #$03
     sta gram_case
     lda cmd_obj_list
     jsr print_object_name
     rts
-sub_4829:
+find_door_in_direction:
     lda #$01
     sta temp_obj_idx
 @
@@ -4277,91 +4277,91 @@ sub_4829:
 @
     lda #$ff
     rts
-sub_4883:
+print_npc_enters:
     pha
-    ldx #<msg_1895
-    ldy #>msg_1895
+    ldx #<msg_enters
+    ldy #>msg_enters
     jsr print_string
     lda #$00
     sta gram_case
     pla
     jmp print_object_name
-sub_4894:
+print_cannot_talk:
     pha
-    jsr sub_3d81
-    ldx #<msg_1a12
-    ldy #>msg_1a12
+    jsr print_actor_says_prefix
+    ldx #<msg_cannot_talk_to
+    ldy #>msg_cannot_talk_to
     jsr print_string
     lda #$04
     sta gram_case
     pla
     jmp print_object_name
-sub_48a8:
+check_read_map_hint:
     cmp #$12
     bne @+
-    ldy cmd_verb_arg1
+    ldy cmd_actor_obj
     cpy #$03
     bne @+
-    jsr sub_3d81
-    ldx #<msg_1a35
-    ldy #>msg_1a35
+    jsr print_actor_says_prefix
+    ldx #<msg_search_south
+    ldy #>msg_search_south
     jsr print_string
     lda #$01
     sta $2d1b
     rts
 @
     rts
-sub_48c4:
+mark_object_broken:
     sta temp_obj_idx
     jsr get_object_ptr
     RAMON
     ldy #$00
-    lda (ZP_69),y
+    lda (zp_ptr_lo),y
     cmp #$ff
     beq @+
     iny
 @
     lda #$11
-    sta (ZP_69),y
+    sta (zp_ptr_lo),y
     ldy #$06
     lda #$00
-    sta (ZP_69),y
+    sta (zp_ptr_lo),y
     ROMON
     rts
-sub_48ee:
+check_valid_weapon:
     lda #<weapon_pair_table
-    sta ZP_69
+    sta zp_ptr_lo
     lda #>weapon_pair_table
-    sta ZP_6A
+    sta zp_ptr_hi
 @
     ldy #$00
-    lda (ZP_69),y
+    lda (zp_ptr_lo),y
     ldx clause_idx
     cmp cmd_obj_list,x
     bne @+
     iny
-    lda (ZP_69),y
-    cmp cmd_verb_arg1
+    lda (zp_ptr_lo),y
+    cmp cmd_actor_obj
     bne @+
     lda #$00
     rts
 @
-    INCPTR ZP_69
-    INCPTR ZP_69
+    INCPTR zp_ptr_lo
+    INCPTR zp_ptr_lo
     ldy #$00
-    lda (ZP_69),y
+    lda (zp_ptr_lo),y
     cmp #$ff
     bne @-1
     rts
-sub_4924:
+check_drowning_rooms:
     ldx #$00
 @
-    lda dark_rooms_table,x
+    lda water_rooms_table,x
     beq @+1
     cmp current_room
     bne @+
-    ldx #<msg_19bb
-    ldy #>msg_19bb
+    ldx #<msg_cannot_swim
+    ldy #>msg_cannot_swim
     jsr print_string
     jmp ask_play_again
 @
@@ -4376,11 +4376,11 @@ show_title_and_intro:
     ldx #<str_kbd_l_box
     ldy #>str_kbd_l_box
     jsr print_string
-    ldx #<str_kbd_mid1
-    ldy #>str_kbd_mid1
+    ldx #<str_kbd_mid_upper
+    ldy #>str_kbd_mid_upper
     jsr print_string
-    ldx #<str_kbd_mid2
-    ldy #>str_kbd_mid2
+    ldx #<str_kbd_mid_lower
+    ldy #>str_kbd_mid_lower
     jsr print_string
     ldx #<str_kbd_bot
     ldy #>str_kbd_bot
@@ -4392,12 +4392,12 @@ show_title_and_intro:
     GETIN
     beq @-
     lda #<str_intro_story
-    sta ZP_69
+    sta zp_ptr_lo
     lda #>str_intro_story
-    sta ZP_6A
+    sta zp_ptr_hi
 @
     ldy #$00
-    lda (ZP_69),y
+    lda (zp_ptr_lo),y
     beq @+2
     CHROUT
     ldx #$20
@@ -4409,7 +4409,7 @@ show_title_and_intro:
     bne @-
     GETIN
     bne @+
-    INCPTR ZP_69
+    INCPTR zp_ptr_lo
     jmp @-1
 @
     rts
@@ -4417,7 +4417,7 @@ show_title_and_intro:
     GETIN
     beq @-
     rts
-sub_499e:
+update_dragon_attack:
     lda #$0e
     jsr get_object_ptr
     ldy #$03
@@ -4448,16 +4448,16 @@ sub_499e:
     lda $2d15
     beq @+1
 @
-    ldx #<msg_208b
-    ldy #>msg_208b
+    ldx #<msg_dragon_kills_you
+    ldy #>msg_dragon_kills_you
     jsr print_string
     jmp ask_play_again
 @
     lda $14a5
     cmp current_room
     bne @+
-    ldx #<msg_20f2
-    ldy #>msg_20f2
+    ldx #<msg_dragon_flies_away
+    ldy #>msg_dragon_flies_away
     jsr print_string
 @
     ldx $14a5
@@ -4468,27 +4468,27 @@ sub_499e:
     RAMON
     lda $14a5
     ldy #$03
-    sta (ZP_69),y
+    sta (zp_ptr_lo),y
     ROMON
     lda $14a5
     cmp current_room
     bne @+
-    ldx #<msg_20d9
-    ldy #>msg_20d9
+    ldx #<msg_dragon_flies_in
+    ldy #>msg_dragon_flies_in
     jsr print_string
     lda $2d15
     bne @-2
 @
     rts
-sub_4a30:
-    jsr sub_3d81
-    ldx #<msg_1ee0
-    ldy #>msg_1ee0
+print_npc_refuses:
+    jsr print_actor_says_prefix
+    ldx #<msg_refuses
+    ldy #>msg_refuses
     jsr print_string
-    jmp L3ED9
+    jmp print_cannot_infinitive
 delay_short:
     lda #$0a
-    sta ZP_69
+    sta zp_ptr_lo
 @
     ldx #$00
     ldy #$00
@@ -4497,7 +4497,7 @@ delay_short:
     bne @-
     dex
     bne @-
-    dec ZP_69
+    dec zp_ptr_lo
     bne @-1
     rts
 write_save_data:
@@ -4512,9 +4512,9 @@ write_save_data:
     CHROUT
     RAMON
     lda obj_table_ptr
-    sta ZP_69
+    sta zp_ptr_lo
     lda $0d07
-    sta ZP_6A
+    sta zp_ptr_hi
     ROMON
 @
     ldy #$00
@@ -4529,12 +4529,12 @@ write_save_data:
     cpy #$08
     bne @-
     clc
-    lda ZP_69
+    lda zp_ptr_lo
     adc #$08
-    sta ZP_69
-    lda ZP_6A
+    sta zp_ptr_lo
+    lda zp_ptr_hi
     adc #$00
-    sta ZP_6A
+    sta zp_ptr_hi
     jmp @-1
 read_save_data:
     ldy #$00
@@ -4548,9 +4548,9 @@ read_save_data:
     sta current_room
     RAMON
     lda obj_table_ptr
-    sta ZP_69
+    sta zp_ptr_lo
     lda $0d07
-    sta ZP_6A
+    sta zp_ptr_hi
     ROMON
 @
     CHRIN
@@ -4558,7 +4558,7 @@ read_save_data:
     pha
     RAMON
     pla
-    sta (ZP_69),y
+    sta (zp_ptr_lo),y
     pha
     ROMON
     pla
@@ -4573,17 +4573,17 @@ read_save_data:
     pha
     RAMON
     pla
-    sta (ZP_69),y
+    sta (zp_ptr_lo),y
     ROMON
     jmp @-
 @
     clc
-    lda ZP_69
+    lda zp_ptr_lo
     adc #$08
-    sta ZP_69
-    lda ZP_6A
+    sta zp_ptr_lo
+    lda zp_ptr_hi
     adc #$00
-    sta ZP_6A
+    sta zp_ptr_hi
     jmp @-2
 str_ask_restore:
     dta CR, C_YEL, c'CZY ODTWARZASZ NAGRAN', PL_A, c' GR', PL_E
@@ -4654,13 +4654,13 @@ load_game:
     CLRCHN
     lda #$01
     CLOSE_CH_JMP
-sub_4be3:
+calc_carried_weight:
     lda #$01
     sta temp_obj_idx
     lda #$00
-    sta ZP_6B
+    sta zp_aux_lo
     lda #$01
-    sta ZP_6C
+    sta zp_aux_hi
 @
     lda temp_obj_idx
     jsr get_object_ptr
@@ -4677,11 +4677,11 @@ sub_4be3:
     ldy temp_obj_idx
     lda obj_weight_table,y
     clc
-    adc ZP_69
-    sta ZP_69
-    lda ZP_6A
+    adc zp_ptr_lo
+    sta zp_ptr_lo
+    lda zp_ptr_hi
     adc #$00
-    sta ZP_6A
+    sta zp_ptr_hi
 @
     inc temp_obj_idx
     jmp @-2
@@ -4694,13 +4694,13 @@ update_hunger_and_carry:
     jsr print_string
     jmp ask_play_again
 @
-    jsr sub_4be3
+    jsr calc_carried_weight
     lda hunger_lo
     sec
-    sbc ZP_6B
+    sbc zp_aux_lo
     sta hunger_lo
     lda hunger_hi
-    sbc ZP_6C
+    sbc zp_aux_hi
     sta hunger_hi
     bcs @+
     lda #$00
@@ -4749,42 +4749,42 @@ main_entry:
 init_new_game:
     RAMON
     lda $c00e
-    sta ZP_69
+    sta zp_ptr_lo
     lda $c00f
-    sta ZP_6A
+    sta zp_ptr_hi
     lda obj_table_ptr
-    sta ZP_6B
+    sta zp_aux_lo
     lda $0d07
-    sta ZP_6C
+    sta zp_aux_hi
 @
     ldy #$00
-    lda (ZP_69),y
+    lda (zp_ptr_lo),y
     cmp #$fe
     beq @+1
 @
-    lda (ZP_69),y
-    sta (ZP_6B),y
+    lda (zp_ptr_lo),y
+    sta (zp_aux_lo),y
     iny
     cpy #$08
     bne @-
     clc
-    lda ZP_69
+    lda zp_ptr_lo
     adc #$08
-    sta ZP_69
-    lda ZP_6A
+    sta zp_ptr_lo
+    lda zp_ptr_hi
     adc #$00
-    sta ZP_6A
+    sta zp_ptr_hi
     clc
-    lda ZP_6B
+    lda zp_aux_lo
     adc #$08
-    sta ZP_6B
-    lda ZP_6C
+    sta zp_aux_lo
+    lda zp_aux_hi
     adc #$00
-    sta ZP_6C
+    sta zp_aux_hi
     jmp @-1
 @
     lda #$fe
-    sta (ZP_6B),y
+    sta (zp_aux_lo),y
     ROMON
     lda #$93
     CHROUT
@@ -4811,27 +4811,27 @@ room_loop:
     jsr load_room_exits
     jsr describe_room
     jsr list_room_objects
-L4D44:
-    jsr sub_45a6
-    jsr sub_4924
-    jsr sub_40cf
-    jsr sub_4375
-    jsr sub_3ffa
-    jsr sub_44c9
-    jsr sub_4185
-    jsr sub_41ca
-    jsr sub_4216
-    jsr sub_42be
-    jsr sub_45f7
-    jsr sub_45a6
-    jsr sub_413f
-    jsr sub_46d6
-    jsr sub_4338
-    jsr sub_499e
-    jsr sub_45a6
-    jsr sub_422e
+turn_events_loop:
+    jsr update_bard_kills_dragon
+    jsr check_drowning_rooms
+    jsr update_warg_event
+    jsr update_thorin_ai
+    jsr update_trolls_event
+    jsr update_goblins_event
+    jsr update_secret_door_visibility
+    jsr update_elves_capture_event
+    jsr update_barrel_guard_event
+    jsr update_beorn_event
+    jsr update_wandering_npcs
+    jsr update_bard_kills_dragon
+    jsr update_spider_event
+    jsr update_dragon_movement
+    jsr update_gandalf_event
+    jsr update_dragon_attack
+    jsr update_bard_kills_dragon
+    jsr update_elrond_and_gollum_events
     jsr update_hunger_and_carry
-    jsr sub_42a6
+    jsr check_map_acquired
 command_loop:
     jsr read_and_tokenize
     lda #$00
@@ -4898,7 +4898,7 @@ print_random_cant_do:
     jmp @-5
 @
     lda #$ff
-    sta cmd_verb_arg1
+    sta cmd_actor_obj
     lda $2c90
     cmp #$01
     beq @+
@@ -4925,9 +4925,9 @@ print_random_cant_do:
     lda $2cbb
     tax
     lda $2ccb,x
-    sta cur_adj1
+    sta cur_adj_first
     lda $2cdb,x
-    sta cur_adj2
+    sta cur_adj_second
     lda $2ceb,x
     sta cur_noun
     lda $2c99
@@ -4945,12 +4945,12 @@ print_random_cant_do:
     beq @-2
 @
     lda #$01
-    jsr sub_3b51
+    jsr find_matching_object
     lda $1484
     cmp #$02
     bcc @+1
-    ldx #<msg_180e
-    ldy #>msg_180e
+    ldx #<msg_do_precise
+    ldy #>msg_do_precise
     jsr print_string
 @
     lda #$03
@@ -4960,13 +4960,13 @@ print_random_cant_do:
 @
     cmp #$00
     bne @+
-    ldx #<msg_181a
-    ldy #>msg_181a
+    ldx #<msg_you_dont_see
+    ldy #>msg_you_dont_see
     jsr print_string
     jmp @-1
 @
     lda $2d0b
-    sta cmd_verb_arg1
+    sta cmd_actor_obj
     sta temp_obj_idx
     lda #$01
     sta gram_case
@@ -4974,17 +4974,17 @@ print_random_cant_do:
     sta $2c8b
     lda #$06
     sta $2c73
-    jsr sub_3482
+    jsr print_verb_form
     lda #$00
     sta $2cb9
     lda #$04
     sta $2c73
-    jsr sub_3418
+    jsr print_preposition
     lda temp_obj_idx
     jsr print_object_name
     lda #$0d
     CHROUT
-    lda cmd_verb_arg1
+    lda cmd_actor_obj
     jsr get_object_ptr
     ldy #$06
     jsr read_bank_byte
@@ -4993,59 +4993,59 @@ print_random_cant_do:
     jmp after_turn_jump
 @
     ldy #$00
-    sty ZP_69
+    sty zp_ptr_lo
 @
     lda $2c90,y
     cmp #$01
     bne @+
-    inc ZP_69
-    sty ZP_6A
+    inc zp_ptr_lo
+    sty zp_ptr_hi
 @
     iny
     cpy clause_idx
     bcc @-1
-    lda ZP_69
+    lda zp_ptr_lo
     cmp #$01
     beq @+
-    jsr sub_3d81
+    jsr print_actor_says_prefix
     jmp print_random_cant_do
 @
-    ldy ZP_6A
+    ldy zp_ptr_hi
     lda #$00
     sta $2c90,y
     lda $2c98,y
     sta cmd_verb_id
     ldy #$00
-    sty ZP_69
+    sty zp_ptr_lo
 @
     lda $2c90,y
     cmp #$02
     bne @+
-    ldx ZP_69
+    ldx zp_ptr_lo
     tya
     sta parsed_words_buf,x
-    inc ZP_69
+    inc zp_ptr_lo
 @
     iny
     cpy clause_idx
     bne @-1
-    lda ZP_69
+    lda zp_ptr_lo
     sta $1480
     cmp #$03
     bcc @+
-    jsr sub_3d81
+    jsr print_actor_says_prefix
     jmp print_random_cant_do
 @
-    lda cmd_verb_arg1
+    lda cmd_actor_obj
     cmp #$0f
     bne @+
     lda $2d16
     beq @+
-    ldx #<msg_1c24
-    ldy #>msg_1c24
+    ldx #<msg_ring_slips_off
+    ldy #>msg_ring_slips_off
     jsr print_string
-    ldx #<msg_1bde
-    ldy #>msg_1bde
+    ldx #<msg_gollum_kills_for_ring
+    ldy #>msg_gollum_kills_for_ring
     jsr print_string
     jmp ask_play_again
 @
@@ -5056,22 +5056,22 @@ print_random_cant_do:
     sta cmd_prep
     jmp @+7
 @
-    jsr sub_3c98
+    jsr validate_clause_prep
     cmp #$ff
     bne @+
-    jsr sub_3d81
+    jsr print_actor_says_prefix
     jmp print_random_cant_do
 @
     dec $1480
     lda $1489
     sta cur_noun
     lda $1487
-    sta cur_adj1
+    sta cur_adj_first
     lda $1488
-    sta cur_adj2
+    sta cur_adj_second
     ldx cmd_verb_id
-    lda prep_table_1,x
-    jsr sub_3b51
+    lda prep_table_primary,x
+    jsr find_matching_object
     lda $2d0b
     sta cmd_prep
     lda $1484
@@ -5079,25 +5079,25 @@ print_random_cant_do:
     beq @+5
     cmp #$00
     beq @+
-    jsr sub_3d81
-    ldx #<msg_180e
-    ldy #>msg_180e
+    jsr print_actor_says_prefix
+    ldx #<msg_do_precise
+    ldy #>msg_do_precise
     jsr print_string
     lda #$03
     sta gram_case
     jmp @+3
 @
-    jsr sub_3d81
-    lda cmd_verb_arg1
+    jsr print_actor_says_prefix
+    lda cmd_actor_obj
     cmp #$ff
     beq @+
-    ldx #<msg_1828
-    ldy #>msg_1828
+    ldx #<msg_i_dont_see
+    ldy #>msg_i_dont_see
     jsr print_string
     jmp @+1
 @
-    ldx #<msg_181a
-    ldy #>msg_181a
+    ldx #<msg_you_dont_see
+    ldy #>msg_you_dont_see
     jsr print_string
 @
     lda #$01
@@ -5106,11 +5106,11 @@ print_random_cant_do:
     lda $1489
     sta cur_noun
     lda $1487
-    sta cur_adj1
+    sta cur_adj_first
     lda $1488
-    sta cur_adj2
+    sta cur_adj_second
     jsr print_inflected_noun
-    lda cmd_verb_arg1
+    lda cmd_actor_obj
     cmp #$ff
     beq @+
     jmp after_turn_jump
@@ -5121,7 +5121,7 @@ print_random_cant_do:
     bne @+
     lda #$00
     sta cmd_obj_count
-    jmp L50CD
+    jmp dispatch_verb
 @
     ldy #$00
 @
@@ -5142,7 +5142,7 @@ print_random_cant_do:
     lda $2cc2
     cmp #$01
     beq @+1
-    jsr sub_3d81
+    jsr print_actor_says_prefix
     jsr get_random_byte
     and #$03
     asl @
@@ -5152,7 +5152,7 @@ print_random_cant_do:
     lda $178a,y
     tay
     jsr print_string
-    lda cmd_verb_arg1
+    lda cmd_actor_obj
     cmp #$ff
     beq @+
     jmp after_turn_jump
@@ -5170,35 +5170,35 @@ print_random_cant_do:
     lda $2ca0,y
     sta $14a4
     lda #<verb_syntax_table
-    sta ZP_69
+    sta zp_ptr_lo
     lda #>verb_syntax_table
-    sta ZP_6A
+    sta zp_ptr_hi
     ldx cmd_verb_id
     beq @+1
 @
     ldy #$00
-    lda (ZP_69),y
-    INCPTR ZP_69
+    lda (zp_ptr_lo),y
+    INCPTR zp_ptr_lo
     cmp #$00
     bne @-
     dex
     bne @-
 @
     ldy #$00
-    lda (ZP_69),y
+    lda (zp_ptr_lo),y
     bne @+
-    jsr sub_3d81
+    jsr print_actor_says_prefix
     jmp print_random_cant_do
 @
     cmp $14a3
     bne @+
     iny
-    lda (ZP_69),y
+    lda (zp_ptr_lo),y
     and $14a2
     bne @+1
 @
-    INCPTR ZP_69
-    INCPTR ZP_69
+    INCPTR zp_ptr_lo
+    INCPTR zp_ptr_lo
     jmp @-2
 @
     ldx $1480
@@ -5214,15 +5214,15 @@ print_random_cant_do:
     ldx $1480
     cpx $2cc2
     bne @-
-L50CD:
+dispatch_verb:
     ldx cmd_verb_id
-    lda prep_table_2,x
+    lda prep_table_secondary,x
     bne @+1
     lda cmd_prep
     cmp #$ff
     beq @+2
 @
-    jsr sub_3d81
+    jsr print_actor_says_prefix
     jmp print_random_cant_do
 @
     cmp #$02
@@ -5235,38 +5235,38 @@ L50CD:
     asl @
     tay
     lda verb_jump_table,y
-    sta ZP_69
+    sta zp_ptr_lo
     lda $0da6,y
-    sta ZP_6A
-    jmp (ZP_69)
-verb_0_go:
+    sta zp_ptr_hi
+    jmp (zp_ptr_lo)
+cmd_go:
     lda cmd_obj_count
     cmp #$01
     beq @+
     jmp print_random_cant_do
 @
     lda $148a
-    sta cur_adj1
+    sta cur_adj_first
     lda $1492
-    sta cur_adj2
+    sta cur_adj_second
     lda $149a
     sta cur_noun
-    jsr sub_3e8e
+    jsr match_direction_phrase
     cmp #$ff
     beq @+
     sta temp_dir_idx
     jmp @+5
 @
     lda #$01
-    jsr sub_3b51
-    jsr sub_3f44
+    jsr find_matching_object
+    jsr report_object_not_found
     cmp #$ff
     bne @+
     jmp after_turn_jump
 @
     lda #$00
     sta clause_idx
-L513C:
+go_through_door:
     lda $2d0b
     sta cmd_obj_list
     jsr get_object_ptr
@@ -5279,7 +5279,7 @@ L513C:
     cmp #$40
     bne @+1
 @
-    jsr sub_3eb4
+    jsr print_cannot_do_action
     jmp after_turn_jump
 @
     lda $2d0b
@@ -5292,25 +5292,25 @@ L513C:
 @
     jsr read_bank_byte
     sta $14a5
-    jmp L523F
+    jmp complete_movement
 @
     RAMON
     lda $c010
-    sta ZP_69
+    sta zp_ptr_lo
     lda $c011
-    sta ZP_6A
+    sta zp_ptr_hi
     ROMON
     ldx current_room
 @
     dex
     beq @+
-    lda ZP_69
+    lda zp_ptr_lo
     clc
     adc #$0a
-    sta ZP_69
-    lda ZP_6A
+    sta zp_ptr_lo
+    lda zp_ptr_hi
     adc #$00
-    sta ZP_6A
+    sta zp_ptr_hi
     jmp @-
 @
     ldy temp_dir_idx
@@ -5318,9 +5318,9 @@ L513C:
     sta $14a5
     cmp #$00
     bne @+
-    jsr sub_3d81
-    ldx #<msg_184c
-    ldy #>msg_184c
+    jsr print_actor_says_prefix
+    ldx #<msg_no_passage
+    ldy #>msg_no_passage
     jsr print_string
     jmp after_turn_jump
 @
@@ -5370,7 +5370,7 @@ L513C:
     sta clause_idx
     lda #$08
     sta $14a2
-    jmp L513C
+    jmp go_through_door
 @
     inc temp_obj_idx
     jmp @-4
@@ -5380,12 +5380,12 @@ L513C:
     sta cmd_obj_list
     lda #$00
     sta clause_idx
-L523F:
-    lda cmd_verb_arg1
+complete_movement:
+    lda cmd_actor_obj
     cmp #$ff
     bne @+1
     lda #$05
-    jsr sub_40b4
+    jsr is_object_dead
     bne @+
     lda #$05
     jsr get_object_ptr
@@ -5393,13 +5393,13 @@ L523F:
     jsr read_bank_byte
     cmp current_room
     bne @+
-    ldx #<msg_1cf5
-    ldy #>msg_1cf5
+    ldx #<msg_warg_blocks_way
+    ldy #>msg_warg_blocks_way
     jsr print_string
     jmp after_turn_jump
 @
     lda #$31
-    jsr sub_40b4
+    jsr is_object_dead
     bne @+
     lda #$31
     jsr get_object_ptr
@@ -5407,13 +5407,13 @@ L523F:
     jsr read_bank_byte
     cmp current_room
     bne @+
-    ldx #<msg_1d13
-    ldy #>msg_1d13
+    ldx #<msg_spider_blocks_way
+    ldy #>msg_spider_blocks_way
     jsr print_string
     jmp after_turn_jump
 @
-    jsr sub_3dfd
-    lda cmd_verb_arg1
+    jsr print_action_feedback
+    lda cmd_actor_obj
     cmp #$ff
     beq @+2
     pha
@@ -5422,8 +5422,8 @@ L523F:
     lda cmd_obj_list
     cmp #$27
     bne @+
-    ldx #<msg_1e57
-    ldy #>msg_1e57
+    ldx #<msg_guard_throws_thorin
+    ldy #>msg_guard_throws_thorin
     jsr print_string
 @
     pla
@@ -5431,9 +5431,9 @@ L523F:
     RAMON
     ldy #$03
     lda $14a5
-    sta (ZP_69),y
+    sta (zp_ptr_lo),y
     ROMON
-    lda cmd_verb_arg1
+    lda cmd_actor_obj
     cmp #$01
     bne @+
     lda #$01
@@ -5446,16 +5446,16 @@ L523F:
     bcc @+
     cmp #$24
     bcs @+
-    ldx #<msg_1d64
-    ldy #>msg_1d64
+    ldx #<msg_ring_moves_boat
+    ldy #>msg_ring_moves_boat
     jsr print_string
     jsr delay_short
     jmp @+2
 @
     cmp #$27
     bne @+
-    ldx #<msg_1d86
-    ldy #>msg_1d86
+    ldx #<msg_barrel_river_ride
+    ldy #>msg_barrel_river_ride
     jsr print_string
     jsr delay_short
     lda #$27
@@ -5463,20 +5463,20 @@ L523F:
     RAMON
     ldy #$03
     lda #$00
-    sta (ZP_69),y
+    sta (zp_ptr_lo),y
     iny
-    sta (ZP_69),y
+    sta (zp_ptr_lo),y
     ROMON
     jmp @+1
 @
     cmp #$2b
     bne @+
-    ldx #<msg_1dff
-    ldy #>msg_1dff
+    ldx #<msg_raft_sails
+    ldy #>msg_raft_sails
     jsr print_string
     jsr delay_short
-    ldx #<msg_1e33
-    ldy #>msg_1e33
+    ldx #<msg_raft_lands
+    ldy #>msg_raft_lands
     jsr print_string
     jmp @+
 @
@@ -5488,11 +5488,11 @@ L523F:
     jsr describe_room
     jsr list_room_objects
     jmp after_turn_jump
-verb_1_take:
+cmd_take:
     lda cmd_obj_count
     beq @-
     lda #$1f
-    jsr sub_3db5
+    jsr resolve_all_cmd_objects
     cmp #$ff
     bne @+
     jmp after_turn_jump
@@ -5505,36 +5505,36 @@ verb_1_take:
     bne @+
     jmp after_turn_jump
 @
-    jsr sub_3d81
-    lda cmd_verb_arg1
+    jsr print_actor_says_prefix
+    lda cmd_actor_obj
     cmp #$ff
     beq @+
-    ldx #<msg_19fa
-    ldy #>msg_19fa
+    ldx #<msg_i_see
+    ldy #>msg_i_see
     jsr print_string
     jmp @+1
 @
-    ldx #<msg_19f0
-    ldy #>msg_19f0
+    ldx #<msg_you_see
+    ldy #>msg_you_see
     jsr print_string
 @
     ldx clause_idx
     lda #$03
     sta gram_case
     lda cmd_obj_list,x
-    jsr sub_2f1d
+    jsr describe_object_and_contents
     lda #$0d
     CHROUT
     ldx clause_idx
     lda cmd_obj_list,x
-    jsr sub_48a8
+    jsr check_read_map_hint
     inc clause_idx
     jmp @-3
-verb_2_drop:
-    lda cmd_verb_arg1
+cmd_drop:
+    lda cmd_actor_obj
     cmp #$ff
     beq @+
-    jsr sub_3d81
+    jsr print_actor_says_prefix
     jmp print_random_cant_do
 @
     lda #$00
@@ -5563,8 +5563,8 @@ verb_2_drop:
     lda print_hdr_flag
     bne @+
     inc print_hdr_flag
-    ldx #<msg_1a0a
-    ldy #>msg_1a0a
+    ldx #<msg_you_have
+    ldy #>msg_you_have
     jsr print_string
 @
     lda #$0d
@@ -5574,7 +5574,7 @@ verb_2_drop:
 @
     inc temp_obj_idx
     jmp @-3
-verb_3_open_close:
+cmd_open_close:
     lda cmd_prep
     cmp #$ff
     bne @+
@@ -5590,12 +5590,12 @@ verb_3_open_close:
     and #$08
     bne @+
     lda cmd_prep
-    jsr sub_4894
+    jsr print_cannot_talk
     jmp after_turn_jump
 @
     lda #$10
 @
-    jsr sub_3db5
+    jsr resolve_all_cmd_objects
     cmp #$ff
     bne @+
     jmp after_turn_jump
@@ -5614,20 +5614,20 @@ verb_3_open_close:
     jsr read_bank_byte
     and #$01
     bne @+
-    jsr sub_3eb4
+    jsr print_cannot_do_action
     jmp @+1
 @
     RAMON
     ldy #$05
-    lda (ZP_69),y
+    lda (zp_ptr_lo),y
     and #$1f
     ora #$20
-    sta (ZP_69),y
+    sta (zp_ptr_lo),y
     ldy #$03
-    lda cmd_verb_arg1
-    sta (ZP_69),y
+    lda cmd_actor_obj
+    sta (zp_ptr_lo),y
     ROMON
-    jsr sub_3dfd
+    jsr print_action_feedback
     ldx clause_idx
     lda cmd_obj_list,x
     cmp #$11
@@ -5638,8 +5638,8 @@ verb_3_open_close:
     jsr read_bank_byte
     cmp current_room
     bne @+
-    ldx #<msg_1bde
-    ldy #>msg_1bde
+    ldx #<msg_gollum_kills_for_ring
+    ldy #>msg_gollum_kills_for_ring
     jsr print_string
     jmp ask_play_again
 @
@@ -5647,7 +5647,7 @@ verb_3_open_close:
     lda cmd_obj_list,x
     cmp #$33
     bne @+
-    lda cmd_verb_arg1
+    lda cmd_actor_obj
     cmp #$ff
     bne @+
     lda #$01
@@ -5656,8 +5656,8 @@ verb_3_open_close:
     jsr read_bank_byte
     cmp current_room
     bne @+
-    ldx #<msg_2179
-    ldy #>msg_2179
+    ldx #<msg_thorin_gems_speech
+    ldy #>msg_thorin_gems_speech
     jsr print_string
     jmp ask_play_again
 @
@@ -5665,18 +5665,18 @@ verb_3_open_close:
     jmp @-4
 @
     jmp after_turn_jump
-verb_4_examine:
+cmd_examine:
     lda cmd_prep
-    cmp cmd_verb_arg1
+    cmp cmd_actor_obj
     bne @+1
 @
-    ldx #<msg_1791
-    ldy #>msg_1791
+    ldx #<msg_dont_understand_mean
+    ldy #>msg_dont_understand_mean
     jsr print_string
     jmp after_turn_jump
 @
     lda #$02
-    jsr sub_3db5
+    jsr resolve_all_cmd_objects
     cmp #$ff
     bne @+
     jmp after_turn_jump
@@ -5704,14 +5704,14 @@ verb_4_examine:
     RAMON
     ldy #$03
     lda cmd_prep
-    sta (ZP_69),y
+    sta (zp_ptr_lo),y
     ROMON
-    jsr sub_3dfd
+    jsr print_action_feedback
     inc clause_idx
     jmp @-1
-verb_5_inventory:
+cmd_inventory:
     lda #$02
-    jsr sub_3db5
+    jsr resolve_all_cmd_objects
     cmp #$ff
     bne @+
     jmp after_turn_jump
@@ -5729,7 +5729,7 @@ verb_5_inventory:
     and #$04
     bne @+1
 @
-    jsr sub_3eb4
+    jsr print_cannot_do_action
     jmp after_turn_jump
 @
     jsr read_bank_byte
@@ -5750,32 +5750,32 @@ verb_5_inventory:
     RAMON
     ldy #$03
     lda cmd_prep
-    sta (ZP_69),y
+    sta (zp_ptr_lo),y
     ldy #$05
     lda #$40
-    sta (ZP_69),y
+    sta (zp_ptr_lo),y
     ROMON
     jmp @+1
 @
     RAMON
     ldy #$03
     lda current_room
-    sta (ZP_69),y
+    sta (zp_ptr_lo),y
     lda #$80
     ldy #$05
-    sta (ZP_69),y
+    sta (zp_ptr_lo),y
     ROMON
 @
-    jsr sub_3dfd
+    jsr print_action_feedback
     inc clause_idx
     jmp @-3
-verb_7_attack:
+cmd_attack:
     lda #$00
     sta clause_idx
     lda #$9f
     CHROUT
     lda #$01
-    jsr sub_3db5
+    jsr resolve_all_cmd_objects
     cmp #$ff
     bne @+
     jmp after_turn_jump
@@ -5797,20 +5797,20 @@ verb_7_attack:
     and #$40
     bne @+3
 @
-    jsr sub_3eb4
+    jsr print_cannot_do_action
     jmp @+6
 @
-    jsr sub_48ee
+    jsr check_valid_weapon
     cmp #$ff
     beq @-1
-    lda cmd_verb_arg1
+    lda cmd_actor_obj
     cmp #$01
     bne @+
     ldx clause_idx
     lda cmd_obj_list,x
     cmp #$21
     bne @+
-    jsr sub_4a30
+    jsr print_npc_refuses
     jmp @+5
 @
     lda cmd_prep
@@ -5836,7 +5836,7 @@ verb_7_attack:
     beq @-3
     ldy #$03
     jsr read_bank_byte
-    cmp cmd_verb_arg1
+    cmp cmd_actor_obj
     bne @-3
 @
     ldx clause_idx
@@ -5849,12 +5849,12 @@ verb_7_attack:
     bne @+
     RAMON
     ldy #$06
-    lda (ZP_69),y
+    lda (zp_ptr_lo),y
     ora #$10
-    sta (ZP_69),y
+    sta (zp_ptr_lo),y
     ROMON
-    jsr sub_3dfd
-    lda cmd_verb_arg1
+    jsr print_action_feedback
+    lda cmd_actor_obj
     cmp #$ff
     bne @+
     ldx clause_idx
@@ -5865,17 +5865,17 @@ verb_7_attack:
 @
     lda $14a6
     sta temp_obj_idx
-    jsr sub_3006
+    jsr print_open_closed_state
 @
     inc clause_idx
     jmp @-9
-verb_8_give_throw:
+cmd_give_throw:
     lda #$00
     sta clause_idx
     lda #$9f
     CHROUT
     lda #$01
-    jsr sub_3db5
+    jsr resolve_all_cmd_objects
     cmp #$ff
     bne @+
     jmp after_turn_jump
@@ -5897,10 +5897,10 @@ verb_8_give_throw:
     and #$40
     bne @+2
 @
-    jsr sub_3eb4
+    jsr print_cannot_do_action
     jmp @+5
 @
-    jsr sub_48ee
+    jsr check_valid_weapon
     cmp #$ff
     beq @-1
     lda cmd_prep
@@ -5926,7 +5926,7 @@ verb_8_give_throw:
     beq @-2
     ldy #$03
     jsr read_bank_byte
-    cmp cmd_verb_arg1
+    cmp cmd_actor_obj
     bne @-2
 @
     ldx clause_idx
@@ -5939,20 +5939,20 @@ verb_8_give_throw:
     beq @+
     RAMON
     ldy #$06
-    lda (ZP_69),y
+    lda (zp_ptr_lo),y
     and #$ef
-    sta (ZP_69),y
+    sta (zp_ptr_lo),y
     ROMON
-    jsr sub_3dfd
+    jsr print_action_feedback
 @
     lda $14a6
     sta temp_obj_idx
-    jsr sub_3006
+    jsr print_open_closed_state
 @
     inc clause_idx
     jmp @-8
-verb_9_put_in:
-    lda cmd_verb_arg1
+cmd_put_in:
+    lda cmd_actor_obj
     cmp #$0d
     bne @+2
     lda cmd_prep
@@ -5967,11 +5967,11 @@ verb_9_put_in:
     lda $148a
     cmp #$ff
     bne @+2
-    jsr sub_3d81
+    jsr print_actor_says_prefix
     lda $2d19
     bne @+
-    ldx #<msg_2282
-    ldy #>msg_2282
+    ldx #<msg_bard_great_idea
+    ldy #>msg_bard_great_idea
     jsr print_string
     inc $2d19
     jmp after_turn_jump
@@ -5982,20 +5982,20 @@ verb_9_put_in:
     jsr read_bank_byte
     cmp #$00
     bne @+
-    ldx #<msg_22ab
-    ldy #>msg_22ab
+    ldx #<msg_bard_already_killed
+    ldy #>msg_bard_already_killed
     jsr print_string
     jmp after_turn_jump
 @
     cmp current_room
     beq @+
-    ldx #<msg_22c3
-    ldy #>msg_22c3
+    ldx #<msg_bard_already_told
+    ldy #>msg_bard_already_told
     jsr print_string
     jmp after_turn_jump
 @
     lda #$01
-    jsr sub_3db5
+    jsr resolve_all_cmd_objects
     cmp #$ff
     bne @+
     jmp after_turn_jump
@@ -6015,7 +6015,7 @@ verb_9_put_in:
     and #$02
     bne @+1
 @
-    jsr sub_3eb4
+    jsr print_cannot_do_action
     jmp @+1
 @
     ldy #$07
@@ -6027,20 +6027,20 @@ verb_9_put_in:
     ldx clause_idx
     lda cmd_obj_list,x
     pha
-    jsr sub_3dfd
+    jsr print_action_feedback
     pla
-    jsr sub_48c4
+    jsr mark_object_broken
 @
     inc clause_idx
     jmp @-4
 @
-    lda cmd_verb_arg1
+    lda cmd_actor_obj
     cmp #$ff
     beq @+
     jmp @-3
 @
-    ldx #<msg_1afb
-    ldy #>msg_1afb
+    ldx #<msg_you_try_to_kill
+    ldy #>msg_you_try_to_kill
     jsr print_string
     lda #$03
     sta gram_case
@@ -6048,25 +6048,25 @@ verb_9_put_in:
     lda cmd_obj_list,x
     pha
     jsr print_object_name
-    ldx #<msg_1b0e
-    ldy #>msg_1b0e
+    ldx #<msg_killed_in_combat
+    ldy #>msg_killed_in_combat
     jsr print_string
     lda #$03
     sta gram_case
     pla
     jsr print_object_name
     jmp ask_play_again
-verb_10_wait:
+cmd_save:
     jsr save_game
     jmp command_loop
-verb_11_quit:
-    lda cmd_verb_arg1
+cmd_quit:
+    lda cmd_actor_obj
     cmp #$ff
     beq @+
     jmp print_random_cant_do
 @
-    ldx #<msg_1861
-    ldy #>msg_1861
+    ldx #<msg_confirm_quit
+    ldy #>msg_confirm_quit
     jsr print_string
 @
     GETIN
@@ -6077,8 +6077,8 @@ verb_11_quit:
     cmp #$4e
     bne @-1
     jmp command_loop
-verb_12_save:
-    lda cmd_verb_arg1
+cmd_wait:
+    lda cmd_actor_obj
     cmp #$ff
     beq @+
     cmp #$01
@@ -6086,16 +6086,16 @@ verb_12_save:
     lda #$02
     sta turn_wait_cnt
 @
-    jsr sub_3dfd
+    jsr print_action_feedback
     jmp after_turn_jump
-verb_13_eat_drink:
+cmd_eat_drink:
     lda #$01
     cmp cmd_obj_count
     beq @+
     jmp print_random_cant_do
 @
     lda #$0f
-    jsr sub_3db5
+    jsr resolve_all_cmd_objects
     cmp #$ff
     bne @+
     jmp after_turn_jump
@@ -6105,52 +6105,52 @@ verb_13_eat_drink:
     lda cmd_obj_list
     cmp #$12
     beq @+
-    jsr sub_3eb4
+    jsr print_cannot_do_action
     jmp after_turn_jump
 @
-    lda cmd_verb_arg1
+    lda cmd_actor_obj
     cmp #$03
     beq @+2
     lda #$0d
     CHROUT
-    jsr sub_3d81
+    jsr print_actor_says_prefix
     lda #$9f
     CHROUT
-    lda cmd_verb_arg1
+    lda cmd_actor_obj
     cmp #$ff
     beq @+
-    ldx #<msg_1834
-    ldy #>msg_1834
+    ldx #<msg_i_cannot
+    ldy #>msg_i_cannot
     jsr print_string
     jmp @+1
 @
-    ldx #<msg_183f
-    ldy #>msg_183f
+    ldx #<msg_you_cannot
+    ldy #>msg_you_cannot
     jsr print_string
 @
     lda cmd_verb_id
     sta $2c73
     lda #$02
     sta $2c8b
-    jsr sub_3482
-    ldx #<msg_1ace
-    ldy #>msg_1ace
+    jsr print_verb_form
+    ldx #<msg_ancient_script
+    ldy #>msg_ancient_script
     jsr print_string
     jmp after_turn_jump
 @
-    jsr sub_3dfd
+    jsr print_action_feedback
     lda #$0d
     CHROUT
-    jsr sub_3d81
-    ldx #<msg_1a35
-    ldy #>msg_1a35
+    jsr print_actor_says_prefix
+    ldx #<msg_search_south
+    ldy #>msg_search_south
     jsr print_string
     lda #$01
     sta $2d1b
     jmp after_turn_jump
-verb_14_fill:
+cmd_fill:
     lda #$02
-    jsr sub_3db5
+    jsr resolve_all_cmd_objects
     cmp #$ff
     bne @+
     jmp after_turn_jump
@@ -6167,7 +6167,7 @@ verb_14_fill:
 @
     lda fillable_objs_table,y
     bne @+
-    jsr sub_3eb4
+    jsr print_cannot_do_action
     jmp @+2
 @
     iny
@@ -6177,27 +6177,27 @@ verb_14_fill:
     RAMON
     ldy #$03
     lda #$00
-    sta (ZP_69),y
+    sta (zp_ptr_lo),y
     iny
-    sta (ZP_69),y
+    sta (zp_ptr_lo),y
     ROMON
-    jsr sub_3dfd
-    lda cmd_verb_arg1
+    jsr print_action_feedback
+    lda cmd_actor_obj
     cmp #$ff
     bne @+
     sta hunger_hi
 @
-    ldx #<msg_210c
-    ldy #>msg_210c
+    ldx #<msg_yum_yum
+    ldy #>msg_yum_yum
     jsr print_string
 @
     inc clause_idx
     jmp @-5
 after_turn_jump:
-    jmp L4D44
+    jmp turn_events_loop
 ask_play_again:
-    ldx #<msg_244c
-    ldy #>msg_244c
+    ldx #<msg_game_over
+    ldy #>msg_game_over
     jsr print_string
 @
     GETIN
@@ -6205,32 +6205,32 @@ ask_play_again:
     ldx #$f8
     txs
     jmp main_entry
-L599D:
-    ldx #<msg_24cb
-    ldy #>msg_24cb
+victory_ending:
+    ldx #<msg_victory_part_one
+    ldy #>msg_victory_part_one
     jsr print_string
-    ldx #<msg_256e
-    ldy #>msg_256e
+    ldx #<msg_victory_part_two
+    ldy #>msg_victory_part_two
     jsr print_string
     jmp @-
-copy_dict_to_c000:
+copy_dict_to_high_ram:
     ldy #$00
-    sty ZP_6B
+    sty zp_aux_lo
     lda #$c0
-    sta ZP_6C
+    sta zp_aux_hi
     lda #<dict_data_src
-    sta ZP_69
+    sta zp_ptr_lo
     lda #>dict_data_src
-    sta ZP_6A
+    sta zp_ptr_hi
     RAMON
 @
-    lda (ZP_69),y
-    sta (ZP_6B),y
+    lda (zp_ptr_lo),y
+    sta (zp_aux_lo),y
     iny
     bne @-
-    inc ZP_6A
-    inc ZP_6C
-    lda ZP_6C
+    inc zp_ptr_hi
+    inc zp_aux_hi
+    lda zp_aux_hi
     cmp #$d0
     bne @-
     ROMON

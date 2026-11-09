@@ -9,12 +9,12 @@
 ; =============================================================================
 
 ; Relocate zero-page pointers out of Atari OS zero page ($00-$7F) to $E0-$EB
-ZP_61 = $e0
-ZP_62 = $e1
-ZP_69 = $e8
-ZP_6A = $e9
-ZP_6B = $ea
-ZP_6C = $eb
+zp_str_lo       = $e0
+zp_str_hi       = $e1
+zp_ptr_lo       = $e8
+zp_ptr_hi       = $e9
+zp_aux_lo       = $ea
+zp_aux_hi       = $eb
 
 scr_ptr_lo      = $e2
 scr_ptr_hi      = $e3
@@ -83,10 +83,10 @@ skip
     jsr atari_init_hardware
 .endm
 
-; Read byte from (ZP_69),Y in $B000-$CFFF RAM (banking out Atari OS ROM)
+; Read byte from (zp_ptr_lo),Y in $B000-$CFFF RAM (banking out Atari OS ROM)
 .macro BANK_READ_IMPL
     jsr atari_ramon
-    lda (ZP_69),y
+    lda (zp_ptr_lo),y
     jsr atari_romon
     cmp #$00
     rts
@@ -216,29 +216,29 @@ atari_dlist:
     bpl @-
     jsr atari_ramon
     lda $c00e
-    sta ZP_69
+    sta zp_ptr_lo
     lda $c00f
-    sta ZP_6A
+    sta zp_ptr_hi
     lda #<[save_ram_buf+14]
     sta io_ram_ptr_lo
     lda #>[save_ram_buf+14]
     sta io_ram_ptr_hi
 @   ldy #$00
-    lda (ZP_69),y
+    lda (zp_ptr_lo),y
     sta (io_ram_ptr_lo),y
     cmp #$fe
     beq @+2
-@   lda (ZP_69),y
+@   lda (zp_ptr_lo),y
     sta (io_ram_ptr_lo),y
     iny
     cpy #$08
     bne @-
     clc
-    lda ZP_69
+    lda zp_ptr_lo
     adc #$08
-    sta ZP_69
+    sta zp_ptr_lo
     bcc @+
-    inc ZP_6A
+    inc zp_ptr_hi
 @   clc
     lda io_ram_ptr_lo
     adc #$08
@@ -688,5 +688,5 @@ io_mode:        dta $00
 cio_active:     dta $00
 save_ram_valid: dta $00
 
-    run boot_stage1
+    run boot_stage_one
 .endm

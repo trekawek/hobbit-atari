@@ -4,12 +4,12 @@
 ; =============================================================================
 
 ; Zero-page pointers used by the game engine and Polish parser
-ZP_61 = $61
-ZP_62 = $62
-ZP_69 = $69
-ZP_6A = $6a
-ZP_6B = $6b
-ZP_6C = $6c
+zp_str_lo = $61
+zp_str_hi = $62
+zp_ptr_lo = $69
+zp_ptr_hi = $6a
+zp_aux_lo = $6b
+zp_aux_hi = $6c
 
 .macro PROGRAM_HEADER
     opt h-
@@ -57,14 +57,14 @@ skip
     sta $d018
 .endm
 
-; Read byte from (ZP_69),Y in banked RAM under BASIC/KERNAL ROM ($B000-$CFFF)
+; Read byte from (zp_ptr_lo),Y in banked RAM under BASIC/KERNAL ROM ($B000-$CFFF)
 .macro BANK_READ_IMPL
     sei
     lda $01
     pha
     lda #$00
     sta $01
-    lda (ZP_69),y
+    lda (zp_ptr_lo),y
     tax
     pla
     sta $01
