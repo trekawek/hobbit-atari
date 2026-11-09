@@ -25,9 +25,9 @@ make check
 
 | File | Description |
 | :--- | :--- |
-| `src/hobbit.asm` | Complete symbolic disassembly of the game (`$0801–$6663`), including the 8×8 Polish font, two-stage bootstrap, dictionary/room/object tables, and Polish inflection parser. |
-| `src/macros.inc` | Platform abstraction macros (`PROGRAM_HEADER`, `RAMON`, `ROMON`, `INCPTR`, `INIT_HARDWARE`, `BANK_READ_IMPL`, `CHROUT`, `GETIN`, `GETCOL`, `CHRIN`, `SETLFS`, `SETNAM`, `OPEN_CH`, `CLOSE_CH_JMP`, `CHKIN`, `CHKOUT`, `CLRCHN`) and zero-page pointer definitions (`ZP_61..ZP_6C`). |
-| `src/atari.inc` | Atari 800XL/XE compatibility layer: 40×25 ANTIC Mode 2 Display List using the original C64 Polish font at `$0800–$0BFF`, PIA `PORTB` (`$D301`) banking for `$C000–$CFFF` RAM, PETSCII-to-screen-code console driver, POKEY Polish keyboard lookup tables, and CIO (`D:HOBBIDATA` / `C:`) + in-memory (`$A800`) save/load. |
+| `src/hobbit.asm` | Common platform-independent disassembly of the game (`$0801–$6663`), including the 8×8 Polish font, two-stage bootstrap, dictionary/room/object tables, and Polish inflection parser. |
+| `src/c64.inc` | Commodore 64 platform definitions & macros (`PROGRAM_HEADER`, `PROGRAM_FOOTER`, `RAMON`, `ROMON`, `INCPTR`, `INIT_HARDWARE`, `BANK_READ_IMPL`, KERNAL I/O wrappers, and zero-page pointers `$61–$62`, `$69–$6C`). |
+| `src/atari.inc` | Atari 800XL/XE platform definitions, macros & compatibility layer: zero-page pointers (`$E0–$EB`), 40×25 ANTIC Mode 2 Display List using the original C64 Polish font at `$0800–$0BFF`, PIA `PORTB` (`$D301`) banking for `$C000–$CFFF` RAM, PETSCII-to-screen-code console driver, POKEY Polish keyboard lookup tables, and CIO (`D:HOBBIDATA` / `C:`) + in-memory (`$A800`) save/load. |
 | `Makefile` | Builds `build/hobbit.prg` and `build/hobbit.xex` and verifies `checksum.md5`. |
 | `checksum.md5` | MD5 checksum of the original 1988 C64 `hobbit.prg`. |
 

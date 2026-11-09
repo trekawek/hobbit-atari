@@ -16,10 +16,10 @@ atari: $(ATARI_TARGET)
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
 
-$(C64_TARGET): $(SRC_DIR)/hobbit.asm $(SRC_DIR)/macros.inc $(SRC_DIR)/atari.inc | $(BUILD_DIR)
+$(C64_TARGET): $(SRC_DIR)/hobbit.asm $(SRC_DIR)/c64.inc | $(BUILD_DIR)
 	$(MADS) $(SRC_DIR)/hobbit.asm -i:$(SRC_DIR) -o:$@
 
-$(ATARI_TARGET): $(SRC_DIR)/hobbit.asm $(SRC_DIR)/macros.inc $(SRC_DIR)/atari.inc | $(BUILD_DIR)
+$(ATARI_TARGET): $(SRC_DIR)/hobbit.asm $(SRC_DIR)/atari.inc | $(BUILD_DIR)
 	$(MADS) $(SRC_DIR)/hobbit.asm -d:TARGET_ATARI=1 -i:$(SRC_DIR) -o:$@
 
 check: $(C64_TARGET) $(ATARI_TARGET)

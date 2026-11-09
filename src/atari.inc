@@ -1,13 +1,25 @@
 ; =============================================================================
-; Atari 800XL/XE Compatibility Layer for "Hobbit czyli w te i wewte..."
+; Atari 800XL/XE Platform Definitions & Compatibility Layer
+; for "Hobbit czyli w te i wewte..."
 ;
-; Provides hardware initialization, ANTIC 40x25 display list using the original
-; C64 Polish 8x8 font at $0800-$0BFF, PIA PORTB ($D301) RAM banking at $C000,
-; PETSCII screen editor emulation, POKEY Polish keyboard translation, and
-; CIO disk/tape + in-memory fallback save/load.
+; Contains all Atari zero-page mappings, cross-platform macros, ANTIC 40x25
+; display list using the original C64 Polish 8x8 font at $0800-$0BFF, PIA PORTB
+; ($D301) RAM banking at $C000-$CFFF, PETSCII screen editor emulation, POKEY
+; Polish keyboard translation, and CIO + in-memory fallback save/load.
 ; =============================================================================
 
-.ifdef TARGET_ATARI
+; Relocate zero-page pointers out of Atari OS zero page ($00-$7F) to $E0-$EB
+ZP_61 = $e0
+ZP_62 = $e1
+ZP_69 = $e8
+ZP_6A = $e9
+ZP_6B = $ea
+ZP_6C = $eb
+
+scr_ptr_lo      = $e2
+scr_ptr_hi      = $e3
+io_ram_ptr_lo   = $e4
+io_ram_ptr_hi   = $e5
 
 atari_screen    = $bc00         ; 40x25 screen RAM ($BC00-$BFE7, 1000 bytes)
 save_ram_buf    = $a800         ; In-memory savegame fallback buffer ($A800-$A9FF)
@@ -40,20 +52,110 @@ ATARI_NMIEN     = $d40e
 ATARI_CIOV      = $e456
 
 ; -----------------------------------------------------------------------------
-; ANTIC Display List: 25 rows x 40 columns of Mode 2 text at $BC00-$BFE7
-; (Align so Display List never crosses a 1 KB boundary)
+; Atari Platform Macros
 ; -----------------------------------------------------------------------------
+
+.macro PROGRAM_HEADER
+    opt h+
+    org $0801
+.endm
+
+; Bank in RAM under $C000-$CFFF via PIA PORTB ($D301)
+.macro RAMON
+    jsr atari_ramon
+.endm
+
+; Restore Atari OS ROM at $C000-$FFFF via PIA PORTB ($D301)
+.macro ROMON
+    jsr atari_romon
+.endm
+
+; 16-bit pointer increment
+.macro INCPTR zp
+    inc :zp
+    bne @+
+    inc :zp+1
+@
+.endm
+
+; Initialize Atari ANTIC 40x25 display list, custom font at $0800, and PORTB
+.macro INIT_HARDWARE
+    jsr atari_init_hardware
+.endm
+
+; Read byte from (ZP_69),Y in $B000-$CFFF RAM (banking out Atari OS ROM)
+.macro BANK_READ_IMPL
+    jsr atari_ramon
+    lda (ZP_69),y
+    jsr atari_romon
+    cmp #$00
+    rts
+.endm
+
+.macro CHROUT
+    jsr atari_chrout
+.endm
+
+.macro CHROUT_JMP
+    jmp atari_chrout
+.endm
+
+.macro GETIN
+    jsr atari_getin
+.endm
+
+.macro GETCOL
+    jsr atari_getcol
+.endm
+
+.macro CHRIN
+    jsr atari_chrin
+.endm
+
+.macro SETLFS
+    jsr atari_setlfs
+.endm
+
+.macro SETNAM
+    jsr atari_setnam
+.endm
+
+.macro OPEN_CH
+    jsr atari_open
+.endm
+
+.macro CLOSE_CH_JMP
+    jmp atari_close
+.endm
+
+.macro CHKIN
+    jsr atari_chkin
+.endm
+
+.macro CHKOUT
+    jsr atari_chkout
+.endm
+
+.macro CLRCHN
+    jsr atari_clrchn
+.endm
+
+; -----------------------------------------------------------------------------
+; Atari Runtime Implementation (emitted at end of binary via PROGRAM_FOOTER)
+; -----------------------------------------------------------------------------
+.macro PROGRAM_FOOTER
+
+    ; ANTIC Display List: 25 rows x 40 columns of Mode 2 text at $BC00-$BFE7
+    ; (Align so Display List never crosses a 1 KB boundary)
     .align $0100
 atari_dlist:
     dta $70, $70, $30           ; 24 blank scanlines
     dta $42, a(atari_screen)    ; Row 0: ANTIC Mode 2 + LMS $BC00
-    :24 dta $02                 ; Rows 1..24: 24 rows of ANTIC Mode 2
+    :+24 dta $02                ; Rows 1..24: 24 rows of ANTIC Mode 2
     dta $41, a(atari_dlist)     ; JVB back to atari_dlist
 
-; -----------------------------------------------------------------------------
 ; Hardware Initialization (replaces C64 VIC-II setup at $4C72)
-; -----------------------------------------------------------------------------
-atari_init_hardware:
+.def :atari_init_hardware
     ; Ensure BASIC ROM ($A000-$BFFF) and Self-Test ($5000-$57FF) are disabled,
     ; and OS ROM ($C000-$FFFF) is enabled
     lda ATARI_PORTB
@@ -105,11 +207,9 @@ atari_init_hardware:
     cli
     rts
 
-; -----------------------------------------------------------------------------
 ; Memory Banking ($C000-$CFFF RAM under Atari OS ROM)
 ; Preserves A, X, Y, and Carry flag.
-; -----------------------------------------------------------------------------
-atari_ramon:
+.def :atari_ramon
     pha
     sei
     lda #$00
@@ -122,7 +222,7 @@ atari_ramon:
     pla
     rts
 
-atari_romon:
+.def :atari_romon
     pha
     lda port_save
     ora #$83                    ; Bit 0 = 1 (OS ROM on), Bit 1 = 1, Bit 7 = 1
@@ -133,21 +233,17 @@ atari_romon:
     cli
     rts
 
-; -----------------------------------------------------------------------------
 ; Cursor Position Query (replaces C64 KERNAL PLOT $FFF0)
 ; Returns current column (0..39) in both X and Y with Carry clear.
-; -----------------------------------------------------------------------------
-atari_getcol:
+.def :atari_getcol
     clc
     ldx cursor_col
     ldy cursor_col
     rts
 
-; -----------------------------------------------------------------------------
 ; Character Output (replaces C64 KERNAL CHROUT $FFD2)
 ; Preserves A, X, Y. Supports PETSCII control codes & Polish font mapping.
-; -----------------------------------------------------------------------------
-atari_chrout:
+.def :atari_chrout
     sta chrout_save_a
     stx chrout_save_x
     sty chrout_save_y
@@ -260,9 +356,7 @@ chrout_done:
     ldy chrout_save_y
     rts
 
-; -----------------------------------------------------------------------------
 ; Screen Helper Routines
-; -----------------------------------------------------------------------------
 atari_clear_screen:
     lda #$00
     sta cursor_row
@@ -291,9 +385,6 @@ atari_put_at_cursor:
     pla
     sta (scr_ptr_lo),y
     rts
-
-scr_ptr_lo  = $e2
-scr_ptr_hi  = $e3
 
 atari_advance_cursor:
     inc cursor_col
@@ -361,16 +452,14 @@ nl_done:
 
 ; Lookup table for row start addresses ($BC00 + row * 40)
 row_addr_lo:
-    :25 dta <[atari_screen + # * 40]
+    :+25 dta <[atari_screen + # * 40]
 row_addr_hi:
-    :25 dta >[atari_screen + # * 40]
+    :+25 dta >[atari_screen + # * 40]
 
-; -----------------------------------------------------------------------------
 ; Keyboard Input (replaces C64 KERNAL GETIN $FFE4)
 ; Non-blocking: returns A=0 (Z=1) if no key, or PETSCII code in A (Z=0).
 ; Preserves X and Y.
-; -----------------------------------------------------------------------------
-atari_getin:
+.def :atari_getin
     lda ATARI_CH
     cmp #$ff
     bne getin_has_key
@@ -398,10 +487,6 @@ getin_shifted:
     rts
 
 ; POKEY Scancode -> PETSCII Lookup Tables (64 bytes unshifted + 64 bytes Shift/Ctrl)
-; Unshifted:
-;   A-Z -> $41-$5A, 0-9 -> $30-$39, SPACE -> $20, RETURN -> $0D, BACKSPACE -> $14
-;   '-' ($0E) / '=' ($0F) -> $40 ('Ż')
-;   ';' ($02) / '+' ($06) / '*' ($07) -> $5C ('Ł')
 pokey_unshifted_table:
     dta $4c, $4a, $5c, $00, $00, $4b, $5c, $5c ; 00-07: L, J, ;(Ł), F1, F2, K, +(Ł), *(Ł)
     dta $4f, $00, $50, $55, $0d, $49, $40, $40 ; 08-0F: O, none, P, U, RETURN, I, -(Ż), =(Ż)
@@ -412,12 +497,6 @@ pokey_unshifted_table:
     dta $39, $00, $30, $37, $14, $38, $00, $00 ; 30-37: 9, none, 0, 7, BACKSPACE, 8, <, >
     dta $46, $48, $44, $00, $00, $47, $53, $41 ; 38-3F: F, H, D, none, CAPS, G, S, A
 
-; Shifted or Control:
-;   Shift/Ctrl + A -> $C1 ('Ą')    Shift/Ctrl + C -> $C3 ('Ć')
-;   Shift/Ctrl + E -> $C5 ('Ę')    Shift/Ctrl + L -> $5C ('Ł')
-;   Shift/Ctrl + N -> $CE ('Ń')    Shift/Ctrl + O -> $CF ('Ó')
-;   Shift/Ctrl + S -> $D3 ('Ś')    Shift/Ctrl + Z -> $DA ('Ź')
-;   Shift/Ctrl + X -> $40 ('Ż')
 pokey_shifted_table:
     dta $5c, $4a, $5c, $00, $00, $4b, $5c, $5c ; 00-07: Ł, J, Ł, F1, F2, K, Ł, Ł
     dta $cf, $00, $50, $55, $0d, $49, $40, $40 ; 08-0F: Ó, none, P, U, RETURN, I, Ż, Ż
@@ -428,18 +507,16 @@ pokey_shifted_table:
     dta $39, $00, $30, $37, $14, $38, $00, $00 ; 30-37: 9, none, 0, 7, BACKSPACE, 8, <, >
     dta $46, $48, $44, $00, $00, $47, $d3, $c1 ; 38-3F: F, H, D, none, CAPS, G, Ś, Ą
 
-; -----------------------------------------------------------------------------
 ; Save / Load I/O Emulation (CIO IOCB #1 + In-Memory Fallback at $A800)
-; -----------------------------------------------------------------------------
-atari_setlfs:
+.def :atari_setlfs
     stx io_device               ; $08 = disk, $01 = tape
     sty io_mode                 ; $01 = save, $00 = load
     rts
 
-atari_setnam:
+.def :atari_setnam
     rts
 
-atari_open:
+.def :atari_open
     lda #<save_ram_buf
     sta io_ram_ptr_lo
     lda #>save_ram_buf
@@ -488,24 +565,24 @@ open_do_ciov:
 open_done:
     rts
 
-atari_chkin:
+.def :atari_chkin
     lda #$01
     sta io_channel
     rts
 
-atari_chkout:
+.def :atari_chkout
     lda #$02
     sta io_channel
     lda #$01
     sta save_ram_valid
     rts
 
-atari_clrchn:
+.def :atari_clrchn
     lda #$00
     sta io_channel
     rts
 
-atari_close:
+.def :atari_close
     lda #$00
     sta io_channel
     lda cio_active
@@ -541,7 +618,7 @@ io_put_done:
     rts
 
 ; Read byte from load stream into A (preserves X and Y)
-atari_chrin:
+.def :atari_chrin
     stx chrin_save_x
     sty chrin_save_y
     lda cio_active
@@ -572,17 +649,12 @@ chrin_done:
     ldy chrin_save_y
     rts
 
-io_ram_ptr_lo   = $e4
-io_ram_ptr_hi   = $e5
-
 atari_fn_disk:
     dta c'D:HOBBIDATA', $9b
 atari_fn_tape:
     dta c'C:', $9b
 
-; -----------------------------------------------------------------------------
 ; Atari Adapter State Variables
-; -----------------------------------------------------------------------------
 cursor_row:     dta $00
 cursor_col:     dta $00
 inst_flag:      dta $00
@@ -599,5 +671,4 @@ cio_active:     dta $00
 save_ram_valid: dta $00
 
     run boot_stage1
-
-.endif
+.endm

@@ -7,7 +7,11 @@
 ; Atari 800XL/XE (.xex) executables from a single unified source.
 ; =============================================================================
 
-    icl "macros.inc"
+.ifdef TARGET_ATARI
+    icl "atari.inc"
+.else
+    icl "c64.inc"
+.endif
 
     PROGRAM_HEADER
 
@@ -6114,4 +6118,4 @@ dict_data_src:
     dta $00, $00, $00, $00, $00, $50, $00, $00, $52, $00, $00, $00, $00, $00, $00, $4f
     dta $00, $51, $00
 
-    icl "atari.inc"
+    PROGRAM_FOOTER
