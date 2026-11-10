@@ -307,46 +307,48 @@ str_kbd_top:
     dta CR
     dta CR, CR, CR, c'    ', C_BLU, $b0, $c0, $b2, $c0, $b2, $c0, $b2, $c0
     dta $b2, $c0, $b2, $c0, $b2, $c0, $b2, $c0, $b2, $c0, $b2, $c0, $b2, $c0
-    dta $ae, CR
+    dta $b2, $c0, $b2, $c0, $c0, $c0, $c0, $c0, $c0, $ae, CR
     dta c'    ', $dd, c' ', $dd, c' ', $dd, C_YEL, PL_E, C_BLU, $dd, c' '
     dta $dd, c' ', $dd, c' ', $dd, c' ', $dd, c' ', $dd, C_YEL, PL_O, C_BLU
-    dta $dd, c' ', $dd, c' ', $dd, CR
+    dta $dd, c' ', $dd, c' ', $dd, c' ', $dd, c'      ', $dd, CR
     dta c'    ', $dd, C_YEL, c'Q', C_BLU, $dd, C_YEL, c'W', C_BLU, $dd, C_YEL
     dta c'E', C_BLU, $dd, C_YEL, c'R', C_BLU, $dd, C_YEL, c'T', C_BLU, $dd
     dta C_YEL, c'Y', C_BLU, $dd, C_YEL, c'U', C_BLU, $dd, C_YEL, c'I', C_BLU
-    dta $dd, C_YEL, c'O', C_BLU, $dd, C_YEL, c'P', C_BLU, $dd, c' ', $dd, CR
+    dta $dd, C_YEL, c'O', C_BLU, $dd, C_YEL, c'P', C_BLU, $dd, c' ', $dd, c' '
+    dta $dd, C_YEL, c'RETURN', C_BLU, $dd, CR
     dta $b0, $c0, $c0, $c0, $b1, $b2, $b1, $b2, $b1, $b2, $b1, $b2, $b1, $b2
     dta $b1, $b2, $b1, $b2, $b1, $b2, $b1, $b2, $b1, $b2, $b1, $b2, $b1, $b2
-    dta $c0, $b2, $c0, $c0, $c0, $c0, $c0, $c0, $ae, $00
+    dta $b1, $b2, $c0, $b2, $c0, $c0, $c0, $bd, $00
 
 str_kbd_mid_upper:
     dta CR, C_BLU, $dd, c'    ', $dd, C_YEL, PL_A, C_BLU, $dd, C_YEL, PL_S
     dta C_BLU, $dd, c' ', $dd, c' ', $dd, c' ', $dd, c' ', $dd, c' ', $dd
     dta c' ', $dd, C_YEL, PL_L, C_BLU, $dd, c' ', $dd, c' ', $dd, c' ', $dd
-    dta c'      ', $dd, CR
+    dta c' ', $dd, CR
     dta $dd, C_YEL, c'CTRL', C_BLU, $dd, C_YEL, c'A', C_BLU, $dd, C_YEL, c'S'
     dta C_BLU, $dd, C_YEL, c'D', C_BLU, $dd, C_YEL, c'F', C_BLU, $dd, C_YEL
     dta c'G', C_BLU, $dd, C_YEL, c'H', C_BLU, $dd, C_YEL, c'J', C_BLU, $dd
     dta C_YEL, c'K', C_BLU, $dd, C_YEL, c'L', C_BLU, $dd, c' ', $dd, c' '
-    dta $dd, c' ', $dd, C_YEL, c'RETURN', C_BLU, $dd, CR
-    dta $ad, $c0, $c0, $c0, $c0, $b1, $b2, $b1, $b2, $b1, $b2, $b1, $b2, $b1
+    dta $dd, c' ', $dd, c' ', $dd, CR
+    dta $ab, $c0, $c0, $c0, $c0, $b1, $b2, $b1, $b2, $b1, $b2, $b1, $b2, $b1
     dta $b2, $b1, $b2, $b1, $b2, $b1, $b2, $b1, $b2, $b1, $b2, $b1, $b2, $b1
-    dta $c0, $b1, $c0, $c0, $c0, $c0, $c0, $c0, $bd, CR
+    dta $c0, $db, $c0, $b3, CR
     dta $00
 
 str_kbd_mid_lower:
-    dta c'      ', $dd, C_YEL, PL_Z_AC, C_BLU, $dd, C_YEL, PL_Z_DOT, C_BLU
+    dta $dd, c' ^^  ', $dd, C_YEL, PL_Z_AC, C_BLU, $dd, C_YEL, PL_Z_DOT, C_BLU
     dta $dd, C_YEL, PL_C, C_BLU, $dd, c' ', $dd, c' ', $dd, C_YEL, PL_N, C_BLU
-    dta $dd, c' ', $dd, c' ', $dd, c' ', $dd, c' ', $dd, CR
-    dta c'      ', $dd, C_YEL, c'Z', C_BLU, $dd, C_YEL, c'X', C_BLU, $dd
+    dta $dd, c' ', $dd, c' ', $dd, c' ', $dd, c' ', $dd, c'^^', $dd, c' ', $dd, CR
+    dta $dd, c'     ', $dd, C_YEL, c'Z', C_BLU, $dd, C_YEL, c'X', C_BLU, $dd
     dta C_YEL, c'C', C_BLU, $dd, C_YEL, c'V', C_BLU, $dd, C_YEL, c'B', C_BLU
     dta $dd, C_YEL, c'N', C_BLU, $dd, C_YEL, c'M', C_BLU, $dd, c' ', $dd
-    dta c' ', $dd, c' ', $dd, CR
+    dta c' ', $dd, c' ', $dd, c'  ', $dd, c' ', $dd, CR
     dta $00
 
 str_kbd_bot:
-    dta c'      ', $ad, $c0, $b1, $c0, $b1, $c0, $b1, $c0, $b1, $c0, $b1, $c0
-    dta $b1, $c0, $b1, $c0, $b1, $c0, $b1, $c0, $bd
+    dta $ad, $c0, $c0, $c0, $c0, $c0, $b1, $c0, $b1, $c0, $b1, $c0, $b1, $c0
+    dta $b1, $c0, $b1, $c0, $b1, $c0, $b1, $c0, $b1, $c0, $b1, $c0, $b1, $c0
+    dta $c0, $b1, $c0, $bd
     dta $00
 
 str_title_logo:
