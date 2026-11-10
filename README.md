@@ -61,13 +61,13 @@ The original game engine (`$2D80–$59DF`) was written in pure 6502 assembly wit
    - On **Atari 800XL/XE**, ANTIC's character base register (`CHBAS` `$02F4` / `CHBASE` `$D409`) points directly to `$08` (`$0800–$0BFF`), and an ANTIC Mode 2 Display List provides a 25-row × 40-column screen at `$BC00–$BFE7`, rendering the exact same Polish glyphs (`Ą, Ć, Ę, Ł, Ń, Ó, Ś, Ź, Ż`), `HOBBIT` logo, and keyboard diagram as the C64 version.
 4. **Polish Keyboard Input on Atari (`GETIN`):**
    - Standard letters `A–Z`, digits `0–9`, `SPACE`, `RETURN`, and `BACKSPACE` work normally.
-   - Polish diacritics can be typed using **`Shift` or `Ctrl` + letter** (or the punctuation keys shown on the title-screen diagram):
-     - `Shift/Ctrl + A` → **Ą**
-     - `Shift/Ctrl + C` → **Ć**
-     - `Shift/Ctrl + E` → **Ę**
-     - `Shift/Ctrl + L` (or `;` / `+` / `*`) → **Ł**
-     - `Shift/Ctrl + N` → **Ń**
-     - `Shift/Ctrl + O` → **Ó**
-     - `Shift/Ctrl + S` → **Ś**
-     - `Shift/Ctrl + Z` → **Ź**
-     - `Shift/Ctrl + X` (or `-` / `=`) → **Ż**
+   - Polish diacritics are typed using **`Ctrl` + letter** as shown on the Atari title-screen keyboard diagram:
+     - `Ctrl + A` → **Ą**
+     - `Ctrl + C` → **Ć**
+     - `Ctrl + E` → **Ę**
+     - `Ctrl + L` → **Ł**
+     - `Ctrl + N` → **Ń**
+     - `Ctrl + O` → **Ó**
+     - `Ctrl + S` → **Ś**
+     - `Ctrl + Z` → **Ź**
+     - `Ctrl + X` → **Ż**

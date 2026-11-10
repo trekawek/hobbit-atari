@@ -483,8 +483,8 @@ row_addr_hi:
     lda #$ff
     sta ATARI_CH
     pla
-    cmp #$40
-    bcs @+
+    bmi @+                      ; Bit 7 = 1 ($80-$FE): Ctrl modifier held
+    and #$3f                    ; Strip Shift bit ($40) so Shift is not used as a Polish modifier
     tax
     lda pokey_unshifted_table,x
     ldx getin_save_x
@@ -492,15 +492,15 @@ row_addr_hi:
     rts
 @   and #$3f
     tax
-    lda pokey_shifted_table,x
+    lda pokey_ctrl_table,x
     ldx getin_save_x
     cmp #$00
     rts
 
-; POKEY Scancode -> PETSCII Lookup Tables (64 bytes unshifted + 64 bytes Shift/Ctrl)
+; POKEY Scancode -> PETSCII Lookup Tables (64 bytes normal + 64 bytes Ctrl)
 pokey_unshifted_table:
-    dta $4c, $4a, $5c, $00, $00, $4b, $5c, $5c ; 00-07: L, J, ;(Ł), F1, F2, K, +(Ł), *(Ł)
-    dta $4f, $00, $50, $55, $0d, $49, $40, $40 ; 08-0F: O, none, P, U, RETURN, I, -(Ż), =(Ż)
+    dta $4c, $4a, $00, $00, $00, $4b, $00, $00 ; 00-07: L, J, ;, F1, F2, K, +, *
+    dta $4f, $00, $50, $55, $0d, $49, $00, $00 ; 08-0F: O, none, P, U, RETURN, I, -, =
     dta $56, $00, $43, $00, $00, $42, $58, $5a ; 10-17: V, HELP, C, F3, F4, B, X, Z
     dta $34, $00, $33, $36, $00, $35, $32, $31 ; 18-1F: 4, none, 3, 6, ESC, 5, 2, 1
     dta $2c, $20, $2e, $4e, $00, $4d, $2f, $00 ; 20-27: comma, SPACE, period, N, none, M, /, INV
@@ -508,15 +508,15 @@ pokey_unshifted_table:
     dta $39, $00, $30, $37, $14, $38, $00, $00 ; 30-37: 9, none, 0, 7, BACKSPACE, 8, <, >
     dta $46, $48, $44, $00, $00, $47, $53, $41 ; 38-3F: F, H, D, none, CAPS, G, S, A
 
-pokey_shifted_table:
-    dta $5c, $4a, $5c, $00, $00, $4b, $5c, $5c ; 00-07: Ł, J, Ł, F1, F2, K, Ł, Ł
-    dta $cf, $00, $50, $55, $0d, $49, $40, $40 ; 08-0F: Ó, none, P, U, RETURN, I, Ż, Ż
-    dta $56, $00, $c3, $00, $00, $42, $40, $da ; 10-17: V, HELP, Ć, F3, F4, B, Ż, Ź
+pokey_ctrl_table:
+    dta $5c, $4a, $00, $00, $00, $4b, $00, $00 ; 00-07: Ctrl+L=Ł, J, ;, F1, F2, K, +, *
+    dta $cf, $00, $50, $55, $0d, $49, $00, $00 ; 08-0F: Ctrl+O=Ó, none, P, U, RETURN, I, -, =
+    dta $56, $00, $c3, $00, $00, $42, $40, $da ; 10-17: V, HELP, Ctrl+C=Ć, F3, F4, B, Ctrl+X=Ż, Ctrl+Z=Ź
     dta $34, $00, $33, $36, $00, $35, $32, $31 ; 18-1F: 4..1
-    dta $2c, $20, $2e, $ce, $00, $4d, $2f, $00 ; 20-27: comma, SPACE, period, Ń, none, M, /, INV
-    dta $52, $00, $c5, $59, $00, $54, $57, $51 ; 28-2F: R, none, Ę, Y, TAB, T, W, Q
+    dta $2c, $20, $2e, $ce, $00, $4d, $2f, $00 ; 20-27: comma, SPACE, period, Ctrl+N=Ń, none, M, /, INV
+    dta $52, $00, $c5, $59, $00, $54, $57, $51 ; 28-2F: R, none, Ctrl+E=Ę, Y, TAB, T, W, Q
     dta $39, $00, $30, $37, $14, $38, $00, $00 ; 30-37: 9, none, 0, 7, BACKSPACE, 8, <, >
-    dta $46, $48, $44, $00, $00, $47, $d3, $c1 ; 38-3F: F, H, D, none, CAPS, G, Ś, Ą
+    dta $46, $48, $44, $00, $00, $47, $d3, $c1 ; 38-3F: F, H, D, none, CAPS, G, Ctrl+S=Ś, Ctrl+A=Ą
 
 ; Save / Load I/O Emulation (Atari DOS 2.5 Block CIO + In-Memory Buffer at $A800)
 .def :atari_setlfs
