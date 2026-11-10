@@ -213,6 +213,10 @@ atari_dlist:
     sta ATARI_CH
 
     ; Configure Atari OS warm-reset vectors (F5 / System Reset) to restart the game cleanly
+    lda #$00
+    sta $0244                   ; Clear COLDST so Warm Reset (F5) does not trigger Cold Start
+    lda #$ff
+    sta $03f8                   ; Set BASICF = $FF so Warm Reset keeps Atari BASIC disabled
     lda #$01
     sta $09                     ; BOOT? = 1 (disk boot succeeded)
     lda #<atari_warmstart
