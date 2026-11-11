@@ -4,6 +4,65 @@ Complete, emulator-verified walkthrough for **Bohdan R. Rau's** 1988 Polish text
 
 ---
 
+## World Map (All 82 Locations: `$01`–`$52`)
+
+![Complete World Map of Hobbit czyli w te i wewte... (82 locations: $01–$52)](screenshots/map.png)
+
+### Regional Route Overview
+
+```mermaid
+flowchart LR
+    subgraph R1["1. Hobbiton & Trollshaws ($01-$06)"]
+        L01["$01 Bag End<br/>(Start, Map, Goal)"] <-->|"E/W (Round Door)"| L02["$02 Wasteland<br/>(Thorin)"]
+        L02 <-->|"E/W"| L03["$03 Trolls' Clearing<br/>(Large Key)"]
+        L03 <-->|"N/S"| L04["$04 Rocky Path"]
+        L04 <-->|"N/S (Large Key)"| L05["$05 Rocky Cave<br/>(Sword, Axe)"]
+        L03 <-->|"E/W"| L06["$06 Rivendell<br/>(Elrond -> Breakfast)"]
+    end
+
+    subgraph R2["2. Misty Mountains ($07-$12)"]
+        L06 <-->|"E/W"| L07["$07 Valley of Mists"]
+        L07 <-->|"S/N"| L0C["$0B-$0F Misty Mountains<br/>(Wild Warg)"]
+        L0C <-->|"D/U"| L10["$10-$11 Lower Ledge<br/>(Golden Key)"]
+        L07 <-->|"E/W"| L12["$12 Rocky Path"]
+    end
+
+    subgraph R3["3. Goblin Dungeons & Lake ($13-$24)"]
+        L12 -.->|"Ambush (no Ring)"| L13["$13 Goblin Dungeon"]
+        L13 <-->|"U/D (Window - Thorin)"| L14["$14-$1F Labyrinth"]
+        L14 <-->|"D/U"| L20["$20-$23 Black Lake<br/>($22: Golden Ring)"]
+        L14 <-->|"NE/SW (Stone Gate)"| L12
+    end
+
+    subgraph R4["4. Beorn's House & Black River ($25-$2E)"]
+        L12 <-->|"E/W"| L25["$25-$26 Courtyard"]
+        L25 <-->|"E/W (Door - Beorn)"| L27["$27 Beorn's House<br/>(Dried Meat)"]
+        L27 <-->|"E/W"| L2C["$28-$2C West Bank"]
+        L2C <-->|"Boat (with Ring)"| L2E["$2E East Bank"]
+    end
+
+    subgraph R5["5. Mirkwood & Elven Dungeons ($2F-$3C)"]
+        L2E <-->|"E/W"| L33["$2F-$33 Clearing<br/>(Black Spider)"]
+        L33 <-->|"E/W"| L34["$34 Clearing"]
+        L34 -.->|"Captured (no Crystal Ball)"| L38["$38-$3B Elven Dungeons<br/>(Golden Key, Bread)"]
+        L38 -->|"Open Barrel"| L37["$37 South Bank"]
+        L34 <-->|"E/W (with Crystal Ball)"| L35["$35 North Bank"]
+        L35 <-->|"Boat"| L37
+    end
+
+    subgraph R6["6. Lake-town Esgaroth ($3D-$4B)"]
+        L37 <-->|"E/W"| L41["$3D-$4A Lake-town<br/>(Bard -> slays Dragon)"]
+        L41 -->|"Hidden Passage ($40)"| L4C["$4C Pier"]
+    end
+
+    subgraph R7["7. Lonely Mountain ($4C-$52)"]
+        L4C <-->|"Raft"| L4F["$4F Stony Beach"]
+        L4F <-->|"E/W or NE->E->D"| L52["$52 Dragon's Lair<br/>(Iron-bound Chest + Crystal Ball)"]
+    end
+```
+
+---
+
 ## 1. Abbreviations & Engine Mechanics
 
 ### Direction & Action Shortcuts (`abbrev_str_table`)

@@ -6,12 +6,72 @@ Kompletny, zweryfikowany w emulatorze opis przejścia polskiej tekstowej gry prz
 
 ## Spis treści
 
+0. [Mapa świata gry (`$01`–`$52`)](#mapa-świata-gry-0152)
 1. [Skróty komend i mechanika silnika gry](#1-skróty-komend-i-mechanika-silnika-gry)
 2. [Opis przejścia krok po kroku (Solucja)](#2-opis-przejścia-krok-po-kroku-solucja)
 3. [Pełny zapis tekstowy przejścia gry (Transkrypcja z gry)](#3-pełny-zapis-tekstowy-przejścia-gry-transkrypcja-z-gry)
 4. [Wszystkie wypowiedzi postaci, komunikaty i zdarzenia w grze](#4-wszystkie-wypowiedzi-postaci-komunikaty-i-zdarzenia-w-grze)
 5. [Spis wszystkich 82 lokacji (`$01`–`$52`)](#5-spis-wszystkich-82-lokacji-0152)
 6. [Spis wszystkich 53 obiektów i postaci (`$01`–`$35`)](#6-spis-wszystkich-53-obiektów-i-postaci-0135)
+
+---
+
+## Mapa świata gry (`$01`–`$52`)
+
+![Pełna mapa świata gry Hobbit czyli w te i wewte... (82 lokacje: $01–$52)](screenshots/map.png)
+
+### Schemat połączeń głównych regionów i optymalnej trasy
+
+```mermaid
+flowchart LR
+    subgraph R1["1. Hobbiton i Polana Trolli ($01-$06)"]
+        L01["$01 W wygodnym tunelu<br/>(Start, Mapa, Koniec)"] <-->|"E/W (Okrągłe drzwi)"| L02["$02 Na pustkowiu<br/>(Thorin)"]
+        L02 <-->|"E/W"| L03["$03 Na polanie trolli<br/>(Wielki klucz)"]
+        L03 <-->|"N/S"| L04["$04 Na skalnej ścieżce"]
+        L04 <-->|"N/S (Wielki klucz)"| L05["$05 W skalnej pieczarze<br/>(Miecz, Topór)"]
+        L03 <-->|"E/W"| L06["$06 W Rivendell<br/>(Elrond -> Śniadanie)"]
+    end
+
+    subgraph R2["2. Góry Mgliste ($07-$12)"]
+        L06 <-->|"E/W"| L07["$07 W Dolinie Mgieł"]
+        L07 <-->|"S/N"| L0C["$0B-$0F Góry Mgliste<br/>(Dziki warg)"]
+        L0C <-->|"D/U"| L10["$10-$11 Dolna półka<br/>(Złoty klucz)"]
+        L07 <-->|"E/W"| L12["$12 Na skalnej ścieżce"]
+    end
+
+    subgraph R3["3. Lochy Goblinów i Jezioro ($13-$24)"]
+        L12 -.->|"Zasadzka (bez Pierścienia)"| L13["$13 W lochu goblinów"]
+        L13 <-->|"U/D (Okno - Thorin)"| L14["$14-$1F Labirynt"]
+        L14 <-->|"D/U"| L20["$20-$23 Czarne Jezioro<br/>($22: Złoty pierścień)"]
+        L14 <-->|"NE/SW (Kamienne wrota)"| L12
+    end
+
+    subgraph R4["4. Dom Beorna i Czarna Rzeka ($25-$2E)"]
+        L12 <-->|"E/W"| L25["$25-$26 Podwórze"]
+        L25 <-->|"E/W (Drzwi - Beorn)"| L27["$27 Dom Beorna<br/>(Suszone mięso)"]
+        L27 <-->|"E/W"| L2C["$28-$2C Zach. brzeg"]
+        L2C <-->|"Łódka (Pierścień)"| L2E["$2E Wsch. brzeg"]
+    end
+
+    subgraph R5["5. Puszcza i Lochy Elfów ($2F-$3C)"]
+        L2E <-->|"E/W"| L33["$2F-$33 Polana<br/>(Czarny pająk)"]
+        L33 <-->|"E/W"| L34["$34 Polana"]
+        L34 -.->|"Niewola (bez Kuli)"| L38["$38-$3B Lochy Elfów<br/>(Złoty klucz, Chleb)"]
+        L38 -->|"Otwarta beczka"| L37["$37 Pd. brzeg W. Rzeki"]
+        L34 <-->|"E/W (z Kulą)"| L35["$35 Pn. brzeg W. Rzeki"]
+        L35 <-->|"Łódka"| L37
+    end
+
+    subgraph R6["6. Miasto nad Jeziorem ($3D-$4B)"]
+        L37 <-->|"E/W"| L41["$3D-$4A Esgaroth<br/>(Bard -> zabija Smoka)"]
+        L41 -->|"Ukryte przejście ($40)"| L4C["$4C Na przystani"]
+    end
+
+    subgraph R7["7. Samotna Góra ($4C-$52)"]
+        L4C <-->|"Tratwa"| L4F["$4F Kamienista plaża"]
+        L4F <-->|"E/W lub NE->E->D"| L52["$52 W jaskini smoka<br/>(Okuta skrzynia + Kula)"]
+    end
+```
 
 ---
 
