@@ -40,7 +40,8 @@ make check
 | `src/atari.inc` | Atari 800XL/XE platform definitions, macros & compatibility layer: zero-page pointers (`$E0–$EB`), 40×25 ANTIC Mode 2 Display List using the original C64 Polish font at `$0800–$0BFF`, PIA `PORTB` (`$D301`) banking for `$C000–$CFFF` RAM, low-RAM relocation/swapping (`$0800–$1FFF` ↔ `$7000–$87FF`) to coexist with Atari DOS 2.5, PETSCII-to-screen-code console driver, POKEY Polish keyboard lookup tables, and DOS 2.5 CIO (`D:HOBBIDATA`) + in-memory (`$A800`) save/load. |
 | `tools/mk_atr.py` | Builds `build/hobbit.atr` containing Atari DOS 2.5 (`tools/dos25/`) and `build/hobbit.xex` as `AUTORUN.SYS`. |
 | `tools/test_save_load.py` | Automated 6502 unit tests verifying disk (`D:HOBBIDATA`) and cassette (`C:`) save/load round-trips and error handling. |
-| `SOLUTION.md` | Complete step-by-step walkthrough and puzzle guide for *Hobbit czyli w te i wewte...*. |
+| `SOLUTION.md` | Complete step-by-step walkthrough and puzzle guide for *Hobbit czyli w te i wewte...* (in English). |
+| `SOLUTION_PL.md` | Polish walkthrough (`Opis przejścia`), full verbatim game transcript, and complete database of all 82 locations, 53 objects/NPCs, and character dialogues. |
 | `Makefile` | Builds `build/hobbit.prg`, `build/hobbit.xex`, and `build/hobbit.atr`, and verifies `checksum.md5`. |
 | `checksum.md5` | MD5 checksum of the original 1988 C64 `hobbit.prg`. |
 
